@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nexus — Dashboard</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    .activity-dot { width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0; }
+    .dot-green{background:var(--success);} .dot-blue{background:var(--accent);} .dot-yellow{background:var(--warning);}
+    .activity-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+    .activity-item:last-child{border-bottom:none;}
+    .activity-text{font-size:13px;flex:1;line-height:1.4;}
+    .activity-time{font-size:11px;color:var(--muted);white-space:nowrap;}
+    .chart-bar-wrap{display:flex;align-items:flex-end;gap:6px;height:80px;margin-top:10px;}
+    .chart-bar{flex:1;background:var(--accent);opacity:0.15;border-radius:3px 3px 0 0;min-width:14px;}
+    .chart-bar.active{opacity:1;}
+    .chart-bar.med{opacity:0.55;}
+    .quick-actions{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="sidebar-logo">Nexus <span>PM</span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="index.html" class="sidebar-link active"><span class="icon">⬛</span> Dashboard</a>
+    <a href="projects.html" class="sidebar-link"><span class="icon">📁</span> Projects</a>
+    <a href="tasks.html" class="sidebar-link"><span class="icon">✅</span> My Tasks</a>
+    <a href="team.html" class="sidebar-link"><span class="icon">👥</span> Team</a>
+    <div class="sidebar-section">Manage</div>
+    <a href="reports.html" class="sidebar-link"><span class="icon">📊</span> Reports</a>
+    <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="avatar">GL</div>
+        <div class="sidebar-name">Grace Li<small>Admin</small></div>
+      </div>
+    </div>
+  </nav>
+  <div class="main-area">
+    <div class="topbar">
+      <span class="topbar-title">Dashboard</span>
+      <input class="topbar-search" type="search" placeholder="Search tasks, projects…" aria-label="Search" />
+      <button class="btn btn-primary btn-sm" onclick="location.href='tasks.html?new=1'">+ New Task</button>
+      <div class="avatar topbar-avatar">GL</div>
+    </div>
+    <div class="page-content">
+      <div class="quick-actions">
+        <button class="btn btn-outline" onclick="location.href='projects.html?new=1'">📁 New Project</button>
+        <button class="btn btn-outline" onclick="location.href='tasks.html?new=1'">✅ New Task</button>
+        <button class="btn btn-outline" onclick="location.href='team.html?invite=1'">👤 Invite Member</button>
+        <button class="btn btn-outline" onclick="location.href='reports.html'">📊 View Reports</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value">12</div>
+          <div class="stat-label">Active Projects</div>
+          <div class="stat-delta delta-up">↑ 2 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">47</div>
+          <div class="stat-label">Open Tasks</div>
+          <div class="stat-delta delta-down">↓ 8 completed today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Team Members</div>
+          <div class="stat-delta" style="color:var(--muted)">No change</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">83%</div>
+          <div class="stat-label">On-time Rate</div>
+          <div class="stat-delta delta-up">↑ 5% from last month</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div class="card" style="flex:2;min-width:300px;">
+          <div class="card-header">
+            <h2>Weekly Task Velocity</h2>
+            <span style="font-size:12px;color:var(--muted)">Last 7 days</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-bar-wrap">
+              <div class="chart-bar" style="height:40%" title="Mon: 4 tasks"></div>
+              <div class="chart-bar med" style="height:60%" title="Tue: 7 tasks"></div>
+              <div class="chart-bar" style="height:30%" title="Wed: 3 tasks"></div>
+              <div class="chart-bar med" style="height:75%" title="Thu: 9 tasks"></div>
+              <div class="chart-bar active" style="height:55%" title="Fri: 6 tasks"></div>
+              <div class="chart-bar" style="height:20%" title="Sat: 2 tasks"></div>
+              <div class="chart-bar" style="height:10%" title="Sun: 1 task"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="flex:1;min-width:220px;">
+          <div class="card-header"><h2>By Status</h2></div>
+          <div class="card-body">
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>To Do</span><strong>18</strong></div>
+              <div style="height:7px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:38%;height:100%;background:#58a6ff;border-radius:4px;"></div></div>
+            </div>
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>In Progress</span><strong>21</strong></div>
+              <div style="height:7px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:45%;height:100%;background:var(--warning);border-radius:4px;"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>Done</span><strong>8</strong></div>
+              <div style="height:7px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:17%;height:100%;background:var(--success);border-radius:4px;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <div class="card-header">
+          <h2>Recent Activity</h2>
+          <a href="reports.html" style="font-size:13px;">View all</a>
+        </div>
+        <div class="card-body" style="padding:4px 18px;">
+          <div class="activity-item">
+            <div class="activity-dot dot-green"></div>
+            <div class="activity-text"><strong>Sam Chen</strong> completed <a href="tasks.html">Update API docs</a> in <a href="projects.html">Platform v2</a></div>
+            <div class="activity-time">2 min ago</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot dot-blue"></div>
+            <div class="activity-text"><strong>You</strong> assigned <a href="tasks.html">Migrate legacy DB tables</a> to <strong>Priya Nair</strong></div>
+            <div class="activity-time">15 min ago</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot dot-yellow"></div>
+            <div class="activity-text"><strong>Alex Kim</strong> moved <a href="tasks.html">Design system audit</a> to <span class="badge badge-yellow">In Review</span></div>
+            <div class="activity-time">1 hr ago</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot dot-blue"></div>
+            <div class="activity-text">New project <a href="projects.html"><strong>Q4 Launch Prep</strong></a> created by <strong>Grace Li</strong></div>
+            <div class="activity-time">3 hr ago</div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot dot-green"></div>
+            <div class="activity-text"><strong>Priya Nair</strong> completed <a href="tasks.html">User research synthesis</a></div>
+            <div class="activity-time">Yesterday</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>My Upcoming Tasks</h2>
+          <a href="tasks.html" style="font-size:13px;">All tasks</a>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table>
+            <thead><tr><th>Task</th><th>Project</th><th>Due</th><th>Priority</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><a href="tasks.html">Finalize onboarding copy</a></td><td>Q4 Launch Prep</td><td>Sep 11</td><td><span class="badge badge-red">High</span></td><td><span class="badge badge-yellow">In Progress</span></td></tr>
+              <tr><td><a href="tasks.html">Review PR #482</a></td><td>Platform v2</td><td>Sep 12</td><td><span class="badge badge-blue">Medium</span></td><td><span class="badge badge-gray">To Do</span></td></tr>
+              <tr><td><a href="tasks.html">Update Confluence docs</a></td><td>Platform v2</td><td>Sep 15</td><td><span class="badge badge-gray">Low</span></td><td><span class="badge badge-gray">To Do</span></td></tr>
+              <tr><td><a href="tasks.html">Accessibility audit — checkout</a></td><td>Web Redesign</td><td>Sep 18</td><td><span class="badge badge-red">High</span></td><td><span class="badge badge-gray">To Do</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

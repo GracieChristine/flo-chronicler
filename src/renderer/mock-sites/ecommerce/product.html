@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ShopFlow — TechPlus ANC Pro Headphones</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    :root{--sidebar:#fff;}
+    .shop-header{background:#fff;border-bottom:1px solid var(--border);}
+    .header-top{max-width:1200px;margin:0 auto;padding:0 20px;height:56px;display:flex;align-items:center;gap:16px;}
+    .shop-logo{font-size:1.2em;font-weight:800;color:var(--text);flex-shrink:0;}
+    .shop-logo span{color:var(--accent);}
+    .header-search{flex:1;max-width:480px;position:relative;}
+    .header-search input{width:100%;padding:8px 12px 8px 36px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
+    .header-search input:focus{outline:none;border-color:var(--accent);}
+    .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
+    .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
+    .cart-btn{position:relative;background:none;border:none;font-size:1.2em;cursor:pointer;padding:4px;}
+    .cart-count{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+    .page-wrap{max-width:1200px;margin:0 auto;padding:24px 20px;}
+    .product-detail{display:flex;gap:32px;flex-wrap:wrap;}
+    .product-images{flex:1;min-width:280px;}
+    .main-image{width:100%;aspect-ratio:1;background:linear-gradient(135deg,#e8eaf6,#c5cae9);border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:5em;margin-bottom:10px;}
+    .thumb-row{display:flex;gap:8px;}
+    .thumb{width:60px;height:60px;background:linear-gradient(135deg,#e8eaf6,#c5cae9);border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.4em;cursor:pointer;}
+    .thumb.active,.thumb:hover{border-color:var(--accent);}
+    .product-info-panel{flex:1;min-width:280px;}
+    .prod-brand{font-size:12px;color:var(--muted);margin-bottom:4px;}
+    .prod-title{font-size:1.4em;font-weight:700;margin-bottom:8px;line-height:1.3;}
+    .prod-rating{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+    .stars{color:#d4a72c;font-size:1.1em;}
+    .rating-count{font-size:13px;color:var(--accent);}
+    .prod-price-row{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;}
+    .prod-price{font-size:1.8em;font-weight:700;color:var(--text);}
+    .prod-was{font-size:1em;color:var(--muted);text-decoration:line-through;}
+    .prod-save{font-size:13px;font-weight:600;color:var(--success);}
+    .option-label{font-size:13px;font-weight:600;margin-bottom:6px;}
+    .option-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+    .chip{padding:5px 12px;border:2px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--surface);}
+    .chip.selected{border-color:var(--accent);background:#ddf4ff;color:var(--accent);font-weight:500;}
+    .chip:hover{border-color:var(--accent);}
+    .qty-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+    .qty-btn{width:32px;height:32px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-size:1.1em;display:flex;align-items:center;justify-content:center;}
+    .qty-input{width:50px;text-align:center;border:1px solid var(--border);border-radius:6px;padding:6px;font-size:13px;}
+    .cta-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+    .cta-row .btn{flex:1;min-width:140px;justify-content:center;}
+    .trust-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:16px;}
+    .trust-item{display:flex;align-items:center;gap:4px;}
+    .spec-row{display:flex;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+    .spec-row:last-child{border-bottom:none;}
+    .spec-key{width:180px;flex-shrink:0;color:var(--muted);}
+    .review-card{padding:14px 0;border-bottom:1px solid var(--border);}
+    .review-card:last-child{border-bottom:none;}
+    .review-header{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
+    .review-stars{color:#d4a72c;font-size:12px;}
+    .review-title{font-weight:600;font-size:13px;}
+    .review-meta{font-size:12px;color:var(--muted);}
+  </style>
+</head>
+<body>
+<header class="shop-header">
+  <div class="header-top">
+    <div class="shop-logo">Shop<span>Flow</span></div>
+    <div class="header-search">
+      <span class="search-icon">🔍</span>
+      <input type="search" placeholder="Search products…" aria-label="Search products" />
+    </div>
+    <div class="header-actions">
+      <a href="#" class="btn btn-outline btn-sm">Sign in</a>
+      <button class="cart-btn" onclick="location.href='cart.html'" aria-label="Shopping cart, 2 items">
+        🛒<span class="cart-count">2</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="page-wrap">
+  <div class="breadcrumb" style="margin-bottom:18px;">
+    <a href="index.html">Home</a><span class="sep">›</span>
+    <a href="index.html">Electronics</a><span class="sep">›</span>
+    <a href="index.html">Headphones</a><span class="sep">›</span>
+    <span class="current">TechPlus ANC Pro</span>
+  </div>
+
+  <div class="product-detail">
+    <div class="product-images">
+      <div class="main-image" id="main-img">🎧</div>
+      <div class="thumb-row">
+        <div class="thumb active" onclick="selectThumb(this,'🎧')">🎧</div>
+        <div class="thumb" onclick="selectThumb(this,'📦')">📦</div>
+        <div class="thumb" onclick="selectThumb(this,'🔌')">🔌</div>
+        <div class="thumb" onclick="selectThumb(this,'📖')">📖</div>
+      </div>
+    </div>
+
+    <div class="product-info-panel">
+      <div class="prod-brand">TechPlus</div>
+      <h1 class="prod-title">TechPlus ANC Pro Headphones — Active Noise Cancellation, 40h Battery</h1>
+      <div class="prod-rating">
+        <span class="stars">★★★★★</span>
+        <a href="#reviews" class="rating-count">312 reviews</a>
+        <span class="badge badge-green">Verified Top Pick</span>
+      </div>
+      <div class="prod-price-row">
+        <span class="prod-price">$89.99</span>
+        <span class="prod-was">$119.99</span>
+        <span class="prod-save">Save $30 (25%)</span>
+      </div>
+
+      <div class="option-label">Color</div>
+      <div class="option-chips">
+        <div class="chip selected" onclick="selectChip(this, 'color')">Midnight Black</div>
+        <div class="chip" onclick="selectChip(this, 'color')">Arctic White</div>
+        <div class="chip" onclick="selectChip(this, 'color')">Navy Blue</div>
+      </div>
+
+      <div class="option-label">Connectivity</div>
+      <div class="option-chips">
+        <div class="chip selected" onclick="selectChip(this, 'conn')">Wireless (Bluetooth 5.3)</div>
+        <div class="chip" onclick="selectChip(this, 'conn')">Wired (3.5mm)</div>
+      </div>
+
+      <div class="option-label">Quantity</div>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty(-1)" aria-label="Decrease quantity">−</button>
+        <input class="qty-input" type="number" id="qty" value="1" min="1" max="10" aria-label="Quantity" />
+        <button class="qty-btn" onclick="changeQty(1)" aria-label="Increase quantity">+</button>
+        <span style="font-size:12px;color:var(--success);">✓ In stock — ships today</span>
+      </div>
+
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="addCart(this)">🛒 Add to cart</button>
+        <button class="btn btn-outline" onclick="location.href='checkout.html'">⚡ Buy now</button>
+      </div>
+      <button class="btn btn-outline" style="width:100%;justify-content:center;margin-bottom:14px;">♡ Save to wishlist</button>
+
+      <div class="trust-row">
+        <span class="trust-item">🚚 Free shipping over $50</span>
+        <span class="trust-item">↩ 30-day returns</span>
+        <span class="trust-item">🔒 Secure checkout</span>
+        <span class="trust-item">🛡 2-year warranty</span>
+      </div>
+
+      <div class="alert alert-info" style="font-size:12px;">🔥 <strong>14 people</strong> viewing this right now · Usually ships within 24 hours</div>
+    </div>
+  </div>
+
+  <!-- Tabs: Description / Specs / Reviews -->
+  <div style="margin-top:32px;">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'desc')">Description</button>
+      <button class="tab-btn" onclick="switchTab(this,'specs')">Specifications</button>
+      <button class="tab-btn" onclick="switchTab(this,'reviews')">Reviews (312)</button>
+    </div>
+
+    <div id="tab-desc" class="tab-panel active">
+      <p style="font-size:13px;line-height:1.7;">Experience sound the way it was meant to be heard. The TechPlus ANC Pro delivers studio-quality audio in a lightweight over-ear design, with industry-leading 40dB active noise cancellation that blocks out the world so you can focus on what matters.</p>
+      <ul style="font-size:13px;line-height:1.9;color:var(--text);">
+        <li><strong>40 hours</strong> battery life (ANC on) · 10-min quick charge = 3 hours</li>
+        <li>Bluetooth 5.3 with multipoint — connect to 2 devices simultaneously</li>
+        <li>30mm precision drivers tuned for flat response</li>
+        <li>Built-in mic array for crystal-clear calls</li>
+        <li>Foldable design with carrying case included</li>
+      </ul>
+    </div>
+    <div id="tab-specs" class="tab-panel">
+      <div class="spec-row"><span class="spec-key">Driver size</span><span>30mm dynamic driver</span></div>
+      <div class="spec-row"><span class="spec-key">Frequency response</span><span>20 Hz – 20 kHz</span></div>
+      <div class="spec-row"><span class="spec-key">Impedance</span><span>32 Ω</span></div>
+      <div class="spec-row"><span class="spec-key">Battery</span><span>40 hrs (ANC on) · 60 hrs (ANC off)</span></div>
+      <div class="spec-row"><span class="spec-key">Charging</span><span>USB-C · 10-min quick charge</span></div>
+      <div class="spec-row"><span class="spec-key">Bluetooth</span><span>5.3 · Multipoint (2 devices)</span></div>
+      <div class="spec-row"><span class="spec-key">Noise cancellation</span><span>Hybrid ANC · −40 dB</span></div>
+      <div class="spec-row"><span class="spec-key">Weight</span><span>245 g</span></div>
+      <div class="spec-row"><span class="spec-key">In box</span><span>Headphones, USB-C cable, 3.5mm cable, carrying case</span></div>
+    </div>
+    <div id="tab-reviews" class="tab-panel">
+      <div style="margin-bottom:18px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="text-align:center;min-width:80px;">
+          <div style="font-size:3em;font-weight:700;">4.8</div>
+          <div style="color:#d4a72c;font-size:1.2em;">★★★★★</div>
+          <div style="font-size:12px;color:var(--muted);">312 reviews</div>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:12px;"><span style="width:25px;">5★</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:78%;height:100%;background:#d4a72c;border-radius:4px;"></div></div><span>78%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:12px;"><span style="width:25px;">4★</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:15%;height:100%;background:#d4a72c;border-radius:4px;"></div></div><span>15%</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:25px;">3★</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:7%;height:100%;background:#d4a72c;border-radius:4px;"></div></div><span>7%</span></div>
+        </div>
+        <button class="btn btn-outline" style="align-self:flex-start;">Write a review</button>
+      </div>
+      <div class="review-card">
+        <div class="review-header"><span class="review-stars">★★★★★</span><span class="review-title">Best headphones I've owned in 10 years</span></div>
+        <div class="review-meta">Sam C. · Verified purchase · Aug 2026</div>
+        <p style="font-size:13px;margin:8px 0 0;line-height:1.5;">The ANC is unreal — I work in a loud open office and these completely block out chatter. Sound quality is warm but clear, and 40 hours is no joke.</p>
+      </div>
+      <div class="review-card">
+        <div class="review-header"><span class="review-stars">★★★★☆</span><span class="review-title">Great but headband could be softer</span></div>
+        <div class="review-meta">Priya N. · Verified purchase · Jul 2026</div>
+        <p style="font-size:13px;margin:8px 0 0;line-height:1.5;">Sound and battery are incredible. Only nitpick is the headband gets a little uncomfortable after 4+ hours. Not a dealbreaker at this price.</p>
+      </div>
+      <button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:12px;">Load all 312 reviews</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectThumb(el, emoji) {
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('main-img').textContent = emoji;
+}
+function selectChip(el, group) {
+  el.closest('.option-chips').querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function changeQty(d) {
+  const inp = document.getElementById('qty');
+  inp.value = Math.max(1, Math.min(10, parseInt(inp.value) + d));
+}
+function addCart(btn) {
+  btn.textContent = '✓ Added to cart';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = '🛒 Add to cart'; btn.disabled = false; }, 1800);
+}
+function switchTab(btn, id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+</script>
+</body>
+</html>

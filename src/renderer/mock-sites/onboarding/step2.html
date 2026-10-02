@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ramp Up — Your Role</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    body{background:#f5f7fa;min-height:100vh;display:flex;flex-direction:column;}
+    .onboard-header{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+    .onboard-logo{font-size:1.1em;font-weight:700;}
+    .onboard-logo span{color:var(--accent);}
+    .onboard-body{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;}
+    .onboard-card{background:#fff;border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;padding:36px 40px;}
+    .step-indicator{display:flex;align-items:center;margin-bottom:28px;}
+    .step-pill{flex:1;height:4px;background:var(--border);border-radius:2px;margin-right:4px;}
+    .step-pill:last-child{margin-right:0;}
+    .step-pill.done{background:var(--accent);}
+    .step-pill.active{background:var(--accent);opacity:0.45;}
+    .onboard-icon{font-size:2em;margin-bottom:12px;}
+    .onboard-title{font-size:1.4em;font-weight:700;margin-bottom:6px;}
+    .onboard-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+    .nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:24px;}
+    .role-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+    .role-card{border:2px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;text-align:center;transition:all 0.15s;}
+    .role-card:hover{border-color:var(--accent);background:#f0f7ff;}
+    .role-card.selected{border-color:var(--accent);background:#ddf4ff;}
+    .role-icon{font-size:1.8em;margin-bottom:6px;}
+    .role-label{font-size:12px;font-weight:600;}
+    .role-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.3;}
+    .dept-select{margin-bottom:16px;}
+    .use-case-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
+    .use-case-row{display:flex;align-items:center;padding:9px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;gap:10px;font-size:13px;}
+    .use-case-row:hover{background:var(--bg);}
+    .use-case-row input{width:auto;margin:0;}
+    .use-case-icon{font-size:1.2em;width:22px;text-align:center;flex-shrink:0;}
+  </style>
+</head>
+<body>
+<header class="onboard-header">
+  <div class="onboard-logo">Ramp<span>Up</span></div>
+  <a href="step1.html" style="font-size:13px;color:var(--muted);">← Back</a>
+</header>
+
+<div class="onboard-body">
+  <div class="onboard-card">
+    <div class="step-indicator">
+      <div class="step-pill done"></div>
+      <div class="step-pill active"></div>
+      <div class="step-pill"></div>
+      <div class="step-pill"></div>
+    </div>
+
+    <div class="onboard-icon">🎯</div>
+    <h1 class="onboard-title">Tell us about your role</h1>
+    <p class="onboard-sub">We'll personalise your workspace and suggest the right templates and integrations for your team.</p>
+
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;">I work in…</div>
+    <div class="role-grid">
+      <div class="role-card" onclick="selectRole(this)">
+        <div class="role-icon">💻</div>
+        <div class="role-label">Engineering</div>
+        <div class="role-desc">Dev, QA, DevOps, Platform</div>
+      </div>
+      <div class="role-card selected" onclick="selectRole(this)">
+        <div class="role-icon">🎨</div>
+        <div class="role-label">Design / UX</div>
+        <div class="role-desc">Product design, research, brand</div>
+      </div>
+      <div class="role-card" onclick="selectRole(this)">
+        <div class="role-icon">📊</div>
+        <div class="role-label">Product</div>
+        <div class="role-desc">PM, strategy, roadmapping</div>
+      </div>
+      <div class="role-card" onclick="selectRole(this)">
+        <div class="role-icon">📣</div>
+        <div class="role-label">Marketing</div>
+        <div class="role-desc">Growth, content, brand, demand</div>
+      </div>
+      <div class="role-card" onclick="selectRole(this)">
+        <div class="role-icon">💼</div>
+        <div class="role-label">Sales / CS</div>
+        <div class="role-desc">Sales, account management, support</div>
+      </div>
+      <div class="role-card" onclick="selectRole(this)">
+        <div class="role-icon">⚙️</div>
+        <div class="role-label">Operations</div>
+        <div class="role-desc">HR, finance, legal, admin</div>
+      </div>
+    </div>
+
+    <div class="form-group dept-select">
+      <label for="seniority">Seniority level</label>
+      <select id="seniority">
+        <option>Individual contributor</option>
+        <option>Team lead / senior IC</option>
+        <option>Manager</option>
+        <option>Director / VP</option>
+        <option>C-suite / Executive</option>
+      </select>
+    </div>
+
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;">What will you mainly use Ramp Up for? <span style="font-weight:400;color:var(--muted);">(select all that apply)</span></div>
+    <div class="use-case-grid">
+      <label class="use-case-row"><span class="use-case-icon">📋</span><input type="checkbox" checked /> Project and task management</label>
+      <label class="use-case-row"><span class="use-case-icon">📝</span><input type="checkbox" checked /> Writing and storing documentation</label>
+      <label class="use-case-row"><span class="use-case-icon">🗺️</span><input type="checkbox" /> Strategic roadmapping</label>
+      <label class="use-case-row"><span class="use-case-icon">🐛</span><input type="checkbox" /> Bug and issue tracking</label>
+      <label class="use-case-row"><span class="use-case-icon">🤝</span><input type="checkbox" /> Cross-team collaboration</label>
+      <label class="use-case-row"><span class="use-case-icon">📈</span><input type="checkbox" /> OKRs and goal tracking</label>
+    </div>
+
+    <div class="nav-row">
+      <a href="step1.html" class="btn btn-outline">← Back</a>
+      <button class="btn btn-primary" onclick="location.href='step3.html'" style="min-width:160px;justify-content:center;">
+        Continue → <span style="font-size:11px;opacity:0.8;">&nbsp;Step 3 of 4</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectRole(el) {
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flo, the Chronicler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+
+  /* ── Two-view toggle ──────────────────────────────────────────────────────
+     body.welcome-mode → show welcome screen, hide recorder UI
+     body (no class)   → hide welcome screen, show recorder UI              */
+  body.welcome-mode .toolbar,
+  body.welcome-mode .recorder-body  { display: none; }
+  body:not(.welcome-mode) .welcome-screen { display: none; }
+
+  /* body in recorder mode is a column flex */
+  body:not(.welcome-mode) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Welcome screen ─────────────────────────────────────────────────────── */
+  .welcome-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(148deg, var(--color-bg) 0%, var(--color-surface-alt) 100%);
+    padding: 24px;
+  }
+  /* Single card — matches REN REVIEWER structure */
+  .welcome-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(58, 31, 74, 0.10), 0 1px 4px rgba(0,0,0,0.06);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 480px;
+  }
+  /* Logo + title inline — matches REN's h1 with inline img */
+  .welcome-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 0.5rem;
+  }
+  .welcome-logo-img {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(58, 31, 74, 0.22);
+  }
+  .welcome-app-name {
+    font-family: var(--font-body);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .welcome-tagline {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem;
+    line-height: 1.6;
+  }
+  /* Form with gap between elements — matches REN's flex-column form */
+  .welcome-url-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 0;
+  }
+  /* Label wrapping input — adds space above + label text like REN */
+  .welcome-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+  .welcome-url-input {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--color-text);
+    background: var(--color-bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .welcome-url-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+  }
+  .welcome-url-input.is-error {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-bg);
+  }
+  .welcome-input-hint {
+    font-size: 0.82rem;
+    color: var(--color-text-faint);
+    margin-top: 6px;
+  }
+  .welcome-input-hint kbd {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 11px;
+    font-family: var(--font-body);
+  }
+  .welcome-error {
+    font-size: 13px;
+    color: var(--color-danger);
+    margin: -0.75rem 0 0;
+  }
+  .welcome-error[hidden] { display: none; }
+.welcome-guides-link {
+    font-size: 0.82rem;
+    color: var(--color-text-faint);
+    margin-top: 1.25rem;
+  }
+  .welcome-guides-link a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+  .welcome-guides-link a:hover { text-decoration: underline; }
+
+  /* ── Recorder toolbar ────────────────────────────────────────────────────── */
+  .toolbar-url-form {
+    display: flex;
+    flex: 1; /* stretches to fill all space between left and right groups */
+  }
+  .toolbar-url-input {
+    width: 100%;
+    padding: 5px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--color-text);
+    background: var(--color-bg);
+  }
+  .toolbar-url-input:focus { outline: none; border-color: var(--color-primary); }
+  .toolbar-step-count {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  /* ── Recorder body ───────────────────────────────────────────────────────── */
+  .recorder-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative; /* anchor for countdown overlay */
+  }
+  webview {
+    flex: 1;
+    border: none;
+    background: #fff;
+  }
+  .steps-panel {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--color-bg);
+    border-left: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .steps-panel-header {
+    padding: 10px 14px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-faint);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+    background: var(--color-surface);
+  }
+  .steps-panel-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  /* ── Toolbar layout ─────────────────────────────────────────────────────── */
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  /* "My Flows" back link — flush with toolbar left edge, matching editor style */
+  .toolbar-back-link {
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding-left: 0;
+  }
+
+  /* ── Recording controls ─────────────────────────────────────────────────── */
+  #btn-start[hidden]          { display: none; }
+  .recording-controls         { display: flex; align-items: center; gap: 8px; }
+  .recording-controls[hidden] { display: none; }
+  /* Pause SVG icon aligns with the text baseline */
+  #btn-pause svg { flex-shrink: 0; }
+
+  /* ── 3-2-1 countdown overlay ─────────────────────────────────────────────── */
+  /* Sits inside .recorder-body (position: relative) so it never covers the toolbar */
+  .countdown-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(123, 106, 175, 0.9);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    gap: 24px;
+  }
+  .countdown-overlay[hidden] { display: none; }
+  .countdown-number {
+    font-family: var(--font-display);
+    font-size: 140px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1;
+    animation: countPop 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes countPop {
+    from { transform: scale(1.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .countdown-label {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.72);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: var(--font-body);
+  }
+</style>
+</head>
+<body class="welcome-mode">
+
+<!-- ── Welcome screen ────────────────────────────────────────────────────────
+     Shown on launch. Hides when the user enters a URL and hits Go/Enter.  -->
+<div class="welcome-screen" id="welcome-screen">
+  <div class="welcome-card">
+    <div class="welcome-header">
+      <img src="../../assets/logo.svg" alt="" class="welcome-logo-img" />
+      <h1 class="welcome-app-name">Flo, the Chronicler</h1>
+    </div>
+    <p class="welcome-tagline">Capture any workflow, step by step.</p>
+    <form class="welcome-url-form" id="welcome-form">
+      <label class="welcome-label">
+        Website URL
+        <input type="text" class="welcome-url-input" id="welcome-url-input"
+               placeholder="https://your-app.com"
+               autocomplete="url" autofocus />
+        <span class="welcome-input-hint">Press <kbd>Enter</kbd> or tab away to navigate</span>
+        <p class="welcome-error" id="welcome-error" role="alert" hidden></p>
+      </label>
+    </form>
+    <p class="welcome-guides-link">Or <a href="guides.html">open My Flows</a>.</p>
+  </div>
+</div>
+
+<!-- ── Recorder toolbar (shown after URL entry) ───────────────────────────── -->
+<div class="toolbar">
+
+  <!-- Brand — persistent across all views -->
+  <div class="toolbar-brand">
+    <img src="../../assets/logo.svg" class="toolbar-brand-logo" alt="" />
+  </div>
+  <span class="toolbar-brand-sep">·</span>
+
+  <!-- Left: My Flows link (navigates to list, with unsaved-steps confirm) -->
+  <div class="toolbar-left">
+    <a href="#" id="btn-logo" class="nav-link toolbar-back-link">My Flows</a>
+  </div>
+
+  <!-- Centre: URL bar (stretches) -->
+  <form class="toolbar-url-form" id="url-form">
+    <input type="text" class="toolbar-url-input" id="url-input"
+           placeholder="Enter a URL to navigate to…" />
+  </form>
+
+  <!-- Right: recording controls + step count -->
+  <div class="toolbar-right">
+    <button id="btn-start" class="btn btn-danger">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="6"/></svg>
+      Start Recording
+    </button>
+    <div id="recording-controls" class="recording-controls" hidden>
+      <button id="btn-pause" class="btn btn-warning">
+        <svg width="11" height="13" viewBox="0 0 11 13" fill="currentColor" aria-hidden="true"><rect x="0" y="0" width="4" height="13" rx="1.5"/><rect x="7" y="0" width="4" height="13" rx="1.5"/></svg>
+        Pause
+      </button>
+      <button id="btn-stop" class="btn btn-stop">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="0" y="0" width="12" height="12" rx="1.5"/></svg>
+        Stop
+      </button>
+    </div>
+    <span class="toolbar-step-count" id="step-count"></span>
+  </div>
+
+</div>
+
+<!-- ── Recorder body ──────────────────────────────────────────────────────── -->
+<div class="recorder-body">
+
+  <!-- 3-2-1 countdown — covers webview + steps panel, stops at toolbar -->
+  <div class="countdown-overlay" id="countdown-overlay" hidden>
+    <div class="countdown-number" id="countdown-number">3</div>
+    <div class="countdown-label">Recording starts in…</div>
+  </div>
+
+  <webview id="target-view" src="about:blank"></webview>
+  <div class="steps-panel">
+    <div class="steps-panel-header">Captured Steps</div>
+    <div class="steps-panel-list" id="steps-list"></div>
+  </div>
+</div>
+
+<!-- ── Save recording modal ───────────────────────────────────────────────────
+     Shown when the user stops recording. They must name and save intentionally,
+     or discard entirely. Nothing lands in My Flows unless it was deliberate.  -->
+<div class="modal-overlay" id="save-modal-overlay" hidden>
+  <div class="modal" style="max-width:420px">
+    <h2>Save your recording</h2>
+    <p class="modal-desc">Give it a name — you can always edit the steps afterwards.</p>
+    <label for="save-title-input">Title</label>
+    <input type="text" id="save-title-input" placeholder="e.g. How to submit a support request" autocomplete="off" />
+    <p id="save-title-error" class="modal-error" hidden>Please enter a title before saving.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-save-discard">Discard</button>
+      <button class="btn btn-primary"   id="btn-save-confirm">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Styled confirm dialog (replaces native confirm() which shows "flo-chronicler") -->
+<div class="modal-overlay" id="confirm-modal-overlay" hidden>
+  <div class="modal" style="max-width:380px">
+    <h2 id="confirm-modal-title">Confirm</h2>
+    <p id="confirm-modal-message" style="color:var(--color-text-muted);font-size:13px;margin:0 0 4px;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-confirm-cancel">Cancel</button>
+      <button class="btn btn-danger"    id="btn-confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="stepGroups.js"></script>
+<script src="stepsPanel.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

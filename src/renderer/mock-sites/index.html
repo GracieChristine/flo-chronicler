@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flo Chronicler — Test Sites</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-size: 13px; color: #1c2026;
+    }
+    .shell { display: flex; height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px; flex-shrink: 0; background: #24292f; color: #cdd9e5;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-head {
+      padding: 14px 16px 10px; border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .sidebar-head h1 { margin: 0 0 2px; font-size: 13px; font-weight: 700; color: #fff; }
+    .sidebar-head p  { margin: 0; font-size: 11px; color: #768390; }
+    .sidebar-scroll  { flex: 1; overflow-y: auto; padding: 8px 0 16px; }
+    .group-label {
+      padding: 10px 16px 4px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em; color: #768390;
+    }
+    .site-btn {
+      display: flex; align-items: center; gap: 8px; width: 100%;
+      padding: 7px 16px; background: none; border: none; color: #cdd9e5;
+      font-size: 12px; font-family: inherit; cursor: pointer; text-align: left;
+    }
+    .site-btn:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .site-btn.active { background: rgba(88,166,255,0.18); color: #fff; }
+    .site-btn .icon { width: 16px; text-align: center; flex-shrink: 0; }
+
+    /* ── Frame area ── */
+    .frame-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .frame-bar {
+      height: 36px; background: #f6f8fa; border-bottom: 1px solid #e1e4e8;
+      display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0;
+    }
+    .frame-url {
+      flex: 1; font-size: 11px; color: #6e7681; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .frame-hint { font-size: 11px; color: #6e7681; }
+    iframe {
+      flex: 1; border: none; background: #fff; display: block;
+    }
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; color: #6e7681; background: #f6f8fa;
+    }
+    .empty-icon { font-size: 2.5em; }
+    .empty-text { font-size: 13px; }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sidebar-head">
+      <h1>🧪 Test Sites</h1>
+      <p>Click a page to preview it</p>
+    </div>
+    <div class="sidebar-scroll">
+      <div class="group-label">SaaS / Project mgmt</div>
+      <button class="site-btn" onclick="load(this,'saas/index.html')"><span class="icon">⬛</span> Dashboard</button>
+      <button class="site-btn" onclick="load(this,'saas/projects.html')"><span class="icon">📁</span> Projects</button>
+      <button class="site-btn" onclick="load(this,'saas/tasks.html')"><span class="icon">✅</span> Tasks</button>
+      <button class="site-btn" onclick="load(this,'saas/settings.html')"><span class="icon">⚙️</span> Settings</button>
+
+      <div class="group-label">E-commerce</div>
+      <button class="site-btn" onclick="load(this,'ecommerce/index.html')"><span class="icon">🛍️</span> Catalog</button>
+      <button class="site-btn" onclick="load(this,'ecommerce/product.html')"><span class="icon">🎧</span> Product detail</button>
+      <button class="site-btn" onclick="load(this,'ecommerce/cart.html')"><span class="icon">🛒</span> Cart</button>
+      <button class="site-btn" onclick="load(this,'ecommerce/checkout.html')"><span class="icon">💳</span> Checkout</button>
+
+      <div class="group-label">Onboarding wizard</div>
+      <button class="site-btn" onclick="load(this,'onboarding/step1.html')"><span class="icon">👋</span> Step 1 — Account</button>
+      <button class="site-btn" onclick="load(this,'onboarding/step2.html')"><span class="icon">🎯</span> Step 2 — Role</button>
+      <button class="site-btn" onclick="load(this,'onboarding/step3.html')"><span class="icon">🏢</span> Step 3 — Workspace</button>
+      <button class="site-btn" onclick="load(this,'onboarding/step4.html')"><span class="icon">🔌</span> Step 4 — Integrations</button>
+      <button class="site-btn" onclick="load(this,'onboarding/complete.html')"><span class="icon">🎉</span> Complete</button>
+    </div>
+  </nav>
+
+  <div class="frame-area">
+    <div class="frame-bar">
+      <span class="frame-url" id="frame-url">No page selected</span>
+      <span class="frame-hint">← pick a page</span>
+    </div>
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">👈</div>
+      <div class="empty-text">Select a page from the sidebar to preview it here</div>
+    </div>
+    <iframe id="frame" hidden></iframe>
+  </div>
+</div>
+
+<script>
+function load(btn, path) {
+  document.querySelectorAll('.site-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const frame = document.getElementById('frame');
+  const empty = document.getElementById('empty-state');
+  const urlEl = document.getElementById('frame-url');
+
+  frame.src = path;
+  frame.hidden = false;
+  empty.style.display = 'none';
+  urlEl.textContent = location.origin + '/mock-sites/' + path;
+}
+</script>
+</body>
+</html>

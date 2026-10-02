@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ShopFlow — All Products</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    :root{--sidebar:#fff;--sidebar-border:#e1e4e8;}
+    body{background:var(--bg);}
+    .shop-header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;}
+    .header-top{max-width:1200px;margin:0 auto;padding:0 20px;height:56px;display:flex;align-items:center;gap:16px;}
+    .shop-logo{font-size:1.2em;font-weight:800;color:var(--text);flex-shrink:0;}
+    .shop-logo span{color:var(--accent);}
+    .header-search{flex:1;max-width:480px;position:relative;}
+    .header-search input{width:100%;padding:8px 12px 8px 36px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
+    .header-search input:focus{outline:none;border-color:var(--accent);}
+    .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
+    .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
+    .cart-btn{position:relative;background:none;border:none;font-size:1.2em;cursor:pointer;padding:4px;}
+    .cart-count{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+    .header-nav{border-top:1px solid var(--border);background:#fff;}
+    .header-nav ul{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;gap:0;list-style:none;}
+    .header-nav li a{display:block;padding:9px 14px;font-size:13px;font-weight:500;color:var(--text);text-decoration:none;border-bottom:2px solid transparent;}
+    .header-nav li a:hover{color:var(--accent);}
+    .header-nav li a.active{color:var(--accent);border-bottom-color:var(--accent);}
+    .shop-layout{max-width:1200px;margin:0 auto;padding:20px;display:flex;gap:20px;}
+    .filter-sidebar{width:220px;flex-shrink:0;}
+    .filter-group{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;}
+    .filter-group h4{margin:0 0 10px;font-size:13px;font-weight:600;}
+    .filter-clear{font-size:12px;color:var(--accent);cursor:pointer;float:right;font-weight:400;}
+    .products-area{flex:1;min-width:0;}
+    .products-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+    .results-count{font-size:13px;color:var(--muted);}
+    .sort-select{width:auto;padding:6px 10px;font-size:13px;}
+    .view-toggle{display:flex;gap:4px;}
+    .view-btn{padding:5px 9px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:13px;}
+    .view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .price-range{display:flex;gap:6px;align-items:center;font-size:13px;}
+    .price-range input{width:70px;}
+    .promo-banner{background:linear-gradient(90deg,#0969da,#0550ae);color:#fff;padding:10px 20px;text-align:center;font-size:13px;}
+    .promo-banner a{color:#cfe2ff;text-decoration:underline;}
+    .rating-stars{color:#d4a72c;}
+    .in-stock{color:var(--success);font-size:12px;}
+    .out-stock{color:var(--muted);font-size:12px;}
+    .product-card .btn{width:100%;margin-top:8px;}
+  </style>
+</head>
+<body>
+<div class="promo-banner">🎉 Free shipping on orders over $50 · Use code <strong>FLOW10</strong> for 10% off · <a href="#">Shop sale</a></div>
+
+<header class="shop-header">
+  <div class="header-top">
+    <div class="shop-logo">Shop<span>Flow</span></div>
+    <div class="header-search">
+      <span class="search-icon">🔍</span>
+      <input type="search" placeholder="Search products…" aria-label="Search products" />
+    </div>
+    <div class="header-actions">
+      <a href="#" class="btn btn-outline btn-sm">Sign in</a>
+      <button class="cart-btn" onclick="location.href='cart.html'" aria-label="Shopping cart, 2 items">
+        🛒
+        <span class="cart-count">2</span>
+      </button>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <ul>
+      <li><a href="index.html" class="active">All</a></li>
+      <li><a href="index.html">Electronics</a></li>
+      <li><a href="index.html">Clothing</a></li>
+      <li><a href="index.html">Home &amp; Garden</a></li>
+      <li><a href="index.html">Books</a></li>
+      <li><a href="index.html">Sports</a></li>
+      <li><a href="index.html">🔥 Sale</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="shop-layout">
+  <aside class="filter-sidebar">
+    <div class="filter-group">
+      <h4>Price <span class="filter-clear">Clear</span></h4>
+      <div class="price-range">
+        <input type="number" placeholder="$0" min="0" aria-label="Min price" />
+        <span>–</span>
+        <input type="number" placeholder="$999" min="0" aria-label="Max price" />
+      </div>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;">Apply</button>
+    </div>
+    <div class="filter-group">
+      <h4>Brand <span class="filter-clear">Clear</span></h4>
+      <label class="checkbox-label"><input type="checkbox" /> Acme Co (24)</label>
+      <label class="checkbox-label"><input type="checkbox" checked /> TechPlus (18)</label>
+      <label class="checkbox-label"><input type="checkbox" /> Zephyr (12)</label>
+      <label class="checkbox-label"><input type="checkbox" /> NovaBrand (9)</label>
+    </div>
+    <div class="filter-group">
+      <h4>Rating <span class="filter-clear">Clear</span></h4>
+      <label class="checkbox-label"><input type="checkbox" /> ⭐⭐⭐⭐⭐ (41)</label>
+      <label class="checkbox-label"><input type="checkbox" checked /> ⭐⭐⭐⭐+ (89)</label>
+      <label class="checkbox-label"><input type="checkbox" /> ⭐⭐⭐+ (132)</label>
+    </div>
+    <div class="filter-group">
+      <h4>Availability</h4>
+      <label class="checkbox-label"><input type="checkbox" checked /> In stock only</label>
+      <label class="checkbox-label"><input type="checkbox" /> Include pre-order</label>
+    </div>
+  </aside>
+
+  <main class="products-area">
+    <div class="products-toolbar">
+      <span class="results-count">Showing <strong>63</strong> results for "All products"</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <select class="sort-select" aria-label="Sort products">
+          <option>Sort: Featured</option>
+          <option>Sort: Price low–high</option>
+          <option>Sort: Price high–low</option>
+          <option>Sort: Best rated</option>
+          <option>Sort: Newest</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" aria-label="Grid view">⊞</button>
+          <button class="view-btn" aria-label="List view">☰</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-grid">
+      <div class="product-card" onclick="location.href='product.html?id=1'">
+        <div class="product-thumb">🎧</div>
+        <div class="product-info">
+          <div class="product-name">TechPlus ANC Pro Headphones</div>
+          <div class="rating-stars">★★★★★ <span style="color:var(--muted);font-size:11px;">(312)</span></div>
+          <div class="product-price">$89.99</div>
+          <div class="in-stock">✓ In stock</div>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addToCart(this)">Add to cart</button>
+        </div>
+      </div>
+      <div class="product-card" onclick="location.href='product.html?id=2'">
+        <div class="product-thumb" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9)">⌨️</div>
+        <div class="product-info">
+          <div class="product-name">Mechanical Keyboard — TKL Layout</div>
+          <div class="rating-stars">★★★★☆ <span style="color:var(--muted);font-size:11px;">(88)</span></div>
+          <div class="product-price">$124.00</div>
+          <div class="in-stock">✓ In stock</div>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addToCart(this)">Add to cart</button>
+        </div>
+      </div>
+      <div class="product-card" onclick="location.href='product.html?id=3'">
+        <div class="product-thumb" style="background:linear-gradient(135deg,#fce4ec,#f8bbd0)">🖱️</div>
+        <div class="product-info">
+          <div class="product-name">Zephyr Wireless Ergonomic Mouse</div>
+          <div class="rating-stars">★★★★★ <span style="color:var(--muted);font-size:11px;">(201)</span></div>
+          <div class="product-price">$54.99</div>
+          <div class="in-stock">✓ In stock</div>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addToCart(this)">Add to cart</button>
+        </div>
+      </div>
+      <div class="product-card" onclick="location.href='product.html?id=4'">
+        <div class="product-thumb" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2)">🖥️</div>
+        <div class="product-info">
+          <div class="product-name">27" 4K IPS Monitor — 144Hz</div>
+          <div class="rating-stars">★★★★☆ <span style="color:var(--muted);font-size:11px;">(64)</span></div>
+          <div class="product-price">$399.00</div>
+          <div class="in-stock">✓ In stock</div>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addToCart(this)">Add to cart</button>
+        </div>
+      </div>
+      <div class="product-card" onclick="location.href='product.html?id=5'">
+        <div class="product-thumb" style="background:linear-gradient(135deg,#e3f2fd,#bbdefb)">💡</div>
+        <div class="product-info">
+          <div class="product-name">Acme Smart Desk Lamp — USB-C</div>
+          <div class="rating-stars">★★★★★ <span style="color:var(--muted);font-size:11px;">(445)</span></div>
+          <div class="product-price">$34.99</div>
+          <div class="in-stock">✓ In stock</div>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addToCart(this)">Add to cart</button>
+        </div>
+      </div>
+      <div class="product-card" onclick="location.href='product.html?id=6'">
+        <div class="product-thumb" style="background:linear-gradient(135deg,#f3e5f5,#e1bee7)">🎮</div>
+        <div class="product-info">
+          <div class="product-name">NovaBrand USB-C Hub 10-in-1</div>
+          <div class="rating-stars">★★★★☆ <span style="color:var(--muted);font-size:11px;">(173)</span></div>
+          <div class="product-price">$49.00</div>
+          <div class="out-stock">⚠ Low stock (3 left)</div>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addToCart(this)">Add to cart</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:24px;">
+      <button class="btn btn-outline">Load more products (57 remaining)</button>
+    </div>
+  </main>
+</div>
+
+<script>
+function addToCart(btn) {
+  btn.textContent = '✓ Added';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = 'Add to cart'; btn.disabled = false; }, 1500);
+}
+</script>
+</body>
+</html>

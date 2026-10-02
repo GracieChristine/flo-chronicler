@@ -1,0 +1,40 @@
+{
+  "name": "flo-chronicler",
+  "version": "0.3.2",
+  "description": "Documentation / Onboarding Guide Generator",
+  "author": "Grace Li",
+  "private": true,
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "electron:pack": "npm version patch --no-git-tag-version && electron-builder",
+    "electron:pack:minor": "npm version minor --no-git-tag-version && electron-builder",
+    "electron:pack:major": "npm version major --no-git-tag-version && electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-reload": "^1.5.0"
+  },
+  "dependencies": {},
+  "build": {
+    "appId": "com.internal.flochronicler",
+    "productName": "Flo, the Chronicler",
+    "icon": "assets/icon.png",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "assets/icon.png",
+      "assets/logo.svg",
+      "!src/renderer/mock-sites/**/*"
+    ],
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

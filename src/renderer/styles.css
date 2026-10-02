@@ -1,0 +1,335 @@
+/* Flo Chronicler — shared design tokens and base styles.
+   Direction: "Quiet Studio" — soft plum/lavender neutrals, muted plum accent.
+   All tokens are CSS custom properties defined once here; nothing is hardcoded
+   per-component. Several past bugs were "a hardcoded color that drifted out of sync." */
+
+:root {
+  --color-bg:           #f0ecf8;
+  --color-surface:      #ffffff;
+  --color-surface-alt:  #e9e2f6;
+  --color-border:       #d5ccea;
+  --color-text:         #1f1d28;
+  --color-text-muted:   #6c6480;
+  --color-text-faint:   #9b93aa;
+
+  --color-primary:       #7b6aaf;
+  --color-primary-dark:  #6657a2;
+  --color-primary-light: #ede8f9;
+
+  --color-danger:        #d6455a;
+  --color-danger-bg:     #fbecee;
+  --color-danger-border: #f0c7cd;
+  --color-warning:       #c98a2e;
+  --color-success:       #2f9e5b;
+
+  /* Semantic button colors — intentionally separate from --color-primary */
+  --btn-record: var(--color-danger);
+  --btn-pause:  var(--color-warning);
+  --btn-stop:   #5b5566;
+
+  --font-display: "Newsreader", Georgia, serif;
+  --font-body:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(33, 31, 41, 0.06);
+  --shadow-md: 0 6px 16px rgba(33, 31, 41, 0.08);
+  --shadow-lg: 0 16px 40px rgba(33, 31, 41, 0.16);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  height: 100%;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+/* Deep plum — darkest shade of the app's plum palette. Creates clear visual
+   hierarchy between nav chrome and the light lavender content area below.   */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  height: 56px;
+  background: #2d2640;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.toolbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.toolbar-brand-logo {
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.toolbar-brand-name {
+  font-family: var(--font-body);
+  font-size: 1.0em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.toolbar-brand-sep {
+  color: var(--color-text-faint);
+  font-size: 0.9em;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+}
+/* Placeholder logo mark — swap the <svg> for a real logo image when ready */
+.logo-mark {
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.toolbar-sep { flex: 1; }
+
+/* ── Dark toolbar: shared element overrides ──────────────────────────────── */
+
+.toolbar .nav-link {
+  color: rgba(255, 255, 255, 0.55);
+}
+.toolbar .nav-link:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Secondary buttons (Export, Cancel) get a ghost-on-dark treatment */
+.toolbar .btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+.toolbar .btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  text-decoration: none;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primary  { background: var(--color-primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-dark); }
+
+.btn-secondary { background: var(--color-surface-alt); color: var(--color-text); }
+.btn-secondary:hover:not(:disabled) { background: var(--color-border); }
+
+.btn-danger  { background: var(--btn-record); color: #fff; }
+.btn-danger:hover:not(:disabled)  { opacity: 0.88; }
+
+.btn-warning { background: var(--btn-pause); color: #fff; }
+.btn-warning:hover:not(:disabled) { opacity: 0.88; }
+
+.btn-stop    { background: var(--btn-stop); color: #fff; }
+.btn-stop:hover:not(:disabled)    { opacity: 0.88; }
+
+.btn-ghost { background: transparent; color: var(--color-text-muted); padding: 4px 10px; }
+.btn-ghost:hover { color: var(--color-text); background: var(--color-surface-alt); }
+
+/* ── Nav links ───────────────────────────────────────────────────────────── */
+
+.nav-link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.nav-link:hover { color: var(--color-primary); background: var(--color-primary-light); }
+
+/* ── Recorder step cards ─────────────────────────────────────────────────── */
+
+.step-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.step-card-img {
+  width: 100%;
+  display: block;
+  object-fit: contain;
+  max-height: 130px;
+  /* Checker shown in letterboxed areas (e.g. when screenshot is near-square) */
+  background-color: #e8e8e8;
+  background-image:
+    linear-gradient(45deg, #d0d0d0 25%, transparent 25%),
+    linear-gradient(-45deg, #d0d0d0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d0d0d0 75%),
+    linear-gradient(-45deg, transparent 75%, #d0d0d0 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+}
+
+.step-card-noimg {
+  width: 100%;
+  height: 70px;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-faint);
+  font-size: 12px;
+}
+
+.step-card-body {
+  padding: 8px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.step-num {
+  font-family: var(--font-display);
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.step-card-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.steps-empty {
+  color: var(--color-text-faint);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 12px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Modals ──────────────────────────────────────────────────────────────── */
+/* IMPORTANT: a plain `display` declaration ALWAYS beats the browser's built-in
+   `[hidden] { display: none }` rule (author styles beat user-agent unconditionally).
+   Every modal overlay needs an explicit [hidden] override, or the hidden attribute
+   silently does nothing and the element renders visible immediately. */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(33, 31, 41, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-overlay[hidden] { display: none; }
+
+.modal {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  max-width: 540px;
+  width: calc(100% - 48px);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h2 {
+  margin: 0 0 16px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.modal label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.modal input[type="text"],
+.modal input[type="email"],
+.modal input[type="password"],
+.modal textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  margin-bottom: 12px;
+}
+
+.modal input:focus, .modal textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.modal-error {
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--color-danger);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.modal-success {
+  background: #edf7f1;
+  border: 1px solid #a8dfc0;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--color-success);
+  font-size: 13px;
+  margin-top: 8px;
+}
+.modal-success a { color: var(--color-success); }

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ramp Up — You're all set!</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    body{background:#f5f7fa;min-height:100vh;display:flex;flex-direction:column;}
+    .onboard-header{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:52px;display:flex;align-items:center;}
+    .onboard-logo{font-size:1.1em;font-weight:700;}
+    .onboard-logo span{color:var(--accent);}
+    .onboard-body{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+    .complete-card{background:#fff;border:1px solid var(--border);border-radius:12px;width:100%;max-width:520px;padding:48px 40px;text-align:center;}
+    .confetti{font-size:3em;margin-bottom:16px;animation:pop 0.4s ease-out;}
+    @keyframes pop{0%{transform:scale(0.5);opacity:0;}80%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+    .complete-title{font-size:1.6em;font-weight:700;margin-bottom:8px;}
+    .complete-sub{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.5;}
+    .next-steps{text-align:left;background:var(--bg);border-radius:8px;padding:18px;margin-bottom:28px;}
+    .next-steps h3{font-size:13px;font-weight:600;margin:0 0 12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+    .next-step-row{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+    .next-step-row:last-child{border-bottom:none;}
+    .next-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .next-step-text{flex:1;font-size:13px;line-height:1.4;}
+    .next-step-text strong{display:block;margin-bottom:2px;}
+    .next-step-text span{color:var(--muted);font-size:12px;}
+    .cta-group{display:flex;flex-direction:column;gap:10px;}
+    .cta-group .btn{justify-content:center;}
+    .step-all-done{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--muted);margin-top:18px;}
+    .step-all-done .dot{width:8px;height:8px;border-radius:50%;background:var(--success);}
+  </style>
+</head>
+<body>
+<header class="onboard-header">
+  <div class="onboard-logo">Ramp<span>Up</span></div>
+</header>
+
+<div class="onboard-body">
+  <div class="complete-card">
+    <div class="confetti">🎉</div>
+    <h1 class="complete-title">You're all set, Grace!</h1>
+    <p class="complete-sub">Your workspace <strong>Poppulo Design Team</strong> is ready. We've applied the Design Team template, connected Slack, and queued invites for 2 teammates.</p>
+
+    <div class="next-steps">
+      <h3>Suggested first steps</h3>
+      <div class="next-step-row">
+        <div class="next-step-num">1</div>
+        <div class="next-step-text">
+          <strong>Create your first project</strong>
+          <span>Set up a project for your next sprint or initiative and invite the team.</span>
+        </div>
+      </div>
+      <div class="next-step-row">
+        <div class="next-step-num">2</div>
+        <div class="next-step-text">
+          <strong>Add your first tasks</strong>
+          <span>Break your project into actionable tasks and assign them.</span>
+        </div>
+      </div>
+      <div class="next-step-row">
+        <div class="next-step-num">3</div>
+        <div class="next-step-text">
+          <strong>Explore templates</strong>
+          <span>Browse ready-made templates for design sprints, PRDs, and retrospectives.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-group">
+      <a href="../saas/projects.html" class="btn btn-primary" style="font-size:14px;padding:10px 20px;">Go to my workspace →</a>
+      <button class="btn btn-outline" onclick="location.href='step1.html'">← Restart onboarding (demo)</button>
+    </div>
+
+    <div class="step-all-done">
+      <div class="dot"></div>
+      All 4 setup steps complete
+    </div>
+  </div>
+</div>
+</body>
+</html>

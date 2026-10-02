@@ -1,0 +1,616 @@
+/* Editor screen styles */
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── View / Edit mode toggling ───────────────────────────────────────────── */
+/* .view-only elements are hidden in edit mode; .edit-only are hidden in view mode */
+
+body.view-mode .edit-only { display: none !important; }
+body.edit-mode .view-only { display: none !important; }
+
+/* Plain-text title shown in view mode — fills toolbar-left after the logo,
+   truncates with ellipsis so it never pushes the right-side buttons off screen */
+.toolbar-title-view {
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Version label — plain muted text, no box. Sits beside the action buttons
+   without competing visually. Clickable (opens version history) in view mode. */
+.version-badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+  user-select: none;
+  padding: 4px 4px;
+  cursor: pointer;
+}
+.version-badge:hover { color: var(--color-primary); }
+
+/* Draft state: warm amber, not clickable (no history to show yet) */
+.version-badge.is-draft {
+  color: var(--color-warning);
+  cursor: default;
+}
+.version-badge.is-draft:hover { color: var(--color-warning); }
+
+/* ── Shared step wrapper: "Step X" label above the card ─────────────────── */
+/* Used by both view mode and edit mode so the label always sits in the
+   same position regardless of which mode is active.                         */
+
+.step-wrap {
+  margin-bottom: 24px;
+}
+
+.step-label {
+  font-family: var(--font-display);
+  font-size: 0.72em;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  padding-left: 2px; /* subtle indent so it aligns with card content */
+}
+
+/* ── View mode: step cards (read-only, 50/50 side-by-side) ──────────────── */
+
+.view-card {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  overflow: hidden;
+  min-height: 220px;
+}
+
+/* Left half — screenshot, locked to 16:9 regardless of captured resolution */
+.view-card-image {
+  flex: 1;
+  min-width: 0;
+  /* Checkerboard = transparent/empty area indicator, not a brand colour */
+  background: repeating-conic-gradient(#e8e8e8 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+  border-right: 1px solid var(--color-border);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.view-shot {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  cursor: default;
+  background: transparent; /* let the checkerboard parent show through */
+}
+
+/* Right half — step number + text */
+.view-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+  gap: 10px;
+}
+
+
+.view-card-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--color-text);
+  margin: 0;
+  white-space: pre-line;
+}
+.view-card-text strong { font-weight: 600; }
+.view-card-text em { font-style: italic; }
+.view-card-text code {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--color-surface-alt, #ede8f8);
+  color: var(--color-primary-dark, #6657a2);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.view-card-text ul,
+.view-card-text ol {
+  margin: 4px 0;
+  padding-left: 1.4em;
+}
+
+/* ── Formatting toolbar (edit mode, above each textarea) ─────────────────── */
+.format-toolbar {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+.format-btn {
+  padding: 2px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.format-btn:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.format-btn-bold   { font-weight: 700; }
+.format-btn-italic { font-style: italic; }
+.format-btn-code   { font-family: Consolas, monospace; font-size: 11px; }
+.format-sep {
+  width: 1px;
+  background: var(--color-border);
+  align-self: stretch;
+  margin: 0 2px;
+}
+
+/* ── Version history modal ────────────────────────────────────────────────── */
+
+.version-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.version-row:last-child { border-bottom: none; }
+
+.version-row-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.version-row-num {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.version-row-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ── Toolbar two-zone layout ────────────────────────────────────────────── */
+/* Left zone grows to fill all available space so the title sits left-aligned
+   and the right zone (buttons) stays pinned to the right edge.              */
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;           /* take all remaining space */
+  min-width: 0;      /* allow inner text to truncate */
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* "My Flows" back link — flush with the toolbar's left padding so it aligns
+   with the right-side buttons, which also sit at the 20px toolbar padding edge */
+.toolbar-back-link {
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding-left: 0;   /* override nav-link's 8px left pad — text starts at the toolbar edge */
+}
+
+/* ── Export dropdown ─────────────────────────────────────────────────────── */
+
+.export-dropdown {
+  position: relative;
+}
+
+.export-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 500;
+  overflow: hidden;
+}
+
+.export-dropdown-menu[hidden] { display: none; }
+
+.export-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.export-dropdown-item:hover { background: var(--color-primary-light); color: var(--color-primary); }
+.export-dropdown-item + .export-dropdown-item { border-top: 1px solid var(--color-border); }
+/* Grayed-out / disabled state for export items not yet available */
+.export-dropdown-item--disabled,
+.export-dropdown-item[disabled] {
+  color: var(--color-text-faint);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.export-dropdown-item--disabled:hover,
+.export-dropdown-item[disabled]:hover {
+  background: transparent;
+  color: var(--color-text-faint);
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+
+.title-input {
+  /* Fills the remaining space in toolbar-left after the logo. Borderless by
+     default — looks like an inline heading; border appears on hover/focus to
+     signal editability. Max-width prevents it from stretching absurdly wide. */
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--color-text);
+  background: transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+.title-input:hover {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+}
+.title-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+/* In edit mode the title is actively editable — always show the border and
+   background so it's obviously a field, not static text. */
+body.edit-mode .title-input {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+}
+body.edit-mode .title-input:focus {
+  border-color: var(--color-primary);
+}
+
+/* ── Dark toolbar: editor-specific overrides ─────────────────────────────── */
+
+/* Title text in view mode */
+.toolbar .toolbar-title-view {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Title input in edit mode */
+.toolbar .title-input {
+  color: #fff;
+}
+.toolbar .title-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* In edit mode, always show a visible (but subtle) border on the dark bg */
+body.edit-mode .toolbar .title-input {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+}
+body.edit-mode .toolbar .title-input:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.1);
+}
+body.edit-mode .toolbar .title-input:focus {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Version label on dark bg */
+.toolbar .version-badge              { color: rgba(255, 255, 255, 0.4); }
+.toolbar .version-badge:hover        { color: rgba(255, 255, 255, 0.8); }
+.toolbar .version-badge.is-draft     { color: var(--color-warning); }
+.toolbar .version-badge.is-draft:hover { color: var(--color-warning); }
+
+/* ── Editor body ─────────────────────────────────────────────────────────── */
+
+.editor-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.editor-steps-list {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Step cards ──────────────────────────────────────────────────────────── */
+
+.edit-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  box-shadow: var(--shadow-sm);
+  cursor: default;  /* only the handle shows grab cursor */
+  /* stretch so the main column fills the full card height (canvas height).
+     handle and canvas override with align-self: flex-start below. */
+  align-items: stretch;
+  transition: border-color 0.15s, background 0.15s;
+}
+.edit-card.drag-over {
+  /* Show a blue drop-line BELOW the card rather than highlighting the whole card.
+     box-shadow doesn't affect layout so no height jitter while dragging. */
+  box-shadow: var(--shadow-sm), 0 4px 0 0 var(--color-primary);
+}
+
+.drag-handle {
+  color: var(--color-text-faint);
+  font-size: 18px;
+  cursor: grab;
+  flex-shrink: 0;
+  padding-top: 1px;
+  user-select: none;
+  line-height: 1;
+  align-self: flex-start; /* don't stretch — stays at top of card */
+}
+
+/* The thumbnail is VIEW-ONLY — cursor explicitly reset to default so it doesn't
+   inherit the parent .edit-card's "grab" and look misleadingly clickable.
+   BUG FIXED: thumbnail used to open the annotate lightbox directly on click,
+   duplicating the "Annotate Screenshot" button. Removed; button is the sole entry. */
+.step-shot {
+  width: 220px;
+  aspect-ratio: 16 / 9; /* 220 × ~124px — matches 1920×1080 ratio */
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  display: block;
+  cursor: default;
+  object-fit: contain;
+  /* Checkerboard = empty padding area, not a brand colour */
+  background: repeating-conic-gradient(#e8e8e8 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+  align-self: flex-start; /* don't stretch — keeps the 16:9 aspect ratio */
+}
+
+.edit-card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+
+
+.edit-card-textarea {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  resize: none;       /* JS auto-resize handles height; manual resize removed */
+  overflow: hidden;   /* hides the brief scroll flash during resize */
+  line-height: 1.5;
+  box-sizing: border-box;
+  /* Override the card's cursor:default — textarea must show I-beam so it's
+     obviously editable (arrow cursor made it look like static text). */
+  cursor: text;
+}
+.edit-card-textarea:focus { outline: none; border-color: var(--color-primary); }
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto; /* push to bottom of the main column regardless of textarea height */
+}
+
+/* ── Add Step button ─────────────────────────────────────────────────────── */
+
+.btn-add-step {
+  display: block;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 14px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-add-step:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+/* ── Split modal ─────────────────────────────────────────────────────────── */
+
+.modal-desc {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.split-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.split-row:last-child { border-bottom: none; }
+
+.split-row input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: auto;
+  margin-bottom: 0;
+}
+
+.split-row label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.5;
+  cursor: pointer;
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* ── Confirm dialog ──────────────────────────────────────────────────────── */
+
+.confirm-modal {
+  max-width: 380px;
+}
+
+/* ── Annotation modal ────────────────────────────────────────────────────── */
+
+.redact-modal {
+  max-width: 92vw;
+  width: 92vw;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+}
+
+.redact-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.redact-tools { display: flex; gap: 4px; }
+
+.tool-btn { padding: 4px 10px; font-size: 12px; }
+.tool-btn.active { background: var(--color-primary); color: #fff; }
+.tool-btn.active:hover { background: var(--color-primary-dark); }
+
+.redact-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: border-color 0.1s;
+}
+.color-swatch.active { border-color: var(--color-text); }
+.color-swatch:hover  { border-color: var(--color-text-muted); }
+
+#custom-color {
+  width: 30px;
+  height: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  cursor: pointer;
+  background: none;
+}
+
+.redact-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* Light neutral surround — keeps webpage screenshots legible when annotating */
+.redact-canvas-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  background: #e8e8e8;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative; /* needed for absolutely-positioned text-tool input */
+}
+
+/* Canvas displayed smaller via CSS; native resolution used for actual drawing */
+#redact-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: calc(92vh - 130px);
+  cursor: crosshair;
+  border-radius: 2px;
+}
+
+/* Text-tool input, placed directly over the canvas at the click point.
+   FIX #1: e.preventDefault() on mousedown prevents the browser from stealing focus back.
+   FIX #2: Specificity raised over ".modal input" to avoid being overridden.
+   FIX #3: Position accounts for redact-canvas-wrap scroll offset. */
+.redact-canvas-wrap .annotate-text-input,
+.redact-canvas-wrap .annotate-text-input:focus {
+  position: absolute;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(255,255,255,0.8);
+  outline: none;
+  font-size: 26px;
+  font-weight: bold;
+  font-family: sans-serif;
+  color: white;
+  padding: 0 2px;
+  min-width: 80px;
+  margin-bottom: 0;
+  width: auto;
+}

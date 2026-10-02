@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flo, the Chronicler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="guides.css">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-brand">
+    <img src="../../assets/logo.svg" class="toolbar-brand-logo" alt="" />
+  </div>
+  <span class="toolbar-brand-sep">·</span>
+  <span class="toolbar-brand-text">My Flows</span>
+  <div class="toolbar-sep"></div>
+  <a href="index.html" class="btn btn-primary">+ New Recording</a>
+</div>
+
+<div class="guides-body">
+  <div id="guides-list"></div>
+  <div id="guides-list"></div>
+</div>
+
+<!-- Styled confirm dialog (replaces native confirm() which shows "flo-chronicler") -->
+<div class="modal-overlay" id="confirm-modal-overlay" hidden>
+  <div class="modal" style="max-width:380px">
+    <h2 id="confirm-modal-title">Confirm</h2>
+    <p id="confirm-modal-message" class="guides-confirm-msg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-confirm-cancel">Cancel</button>
+      <button class="btn btn-danger"    id="btn-confirm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="guides.js"></script>
+</body>
+</html>

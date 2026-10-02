@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nexus — Tasks</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    .task-layout{display:flex;gap:0;flex:1;overflow:hidden;}
+    .task-list{width:380px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--surface);}
+    .task-detail{flex:1;overflow-y:auto;padding:24px;}
+    .task-row{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:10px;}
+    .task-row:hover{background:var(--bg);}
+    .task-row.selected{background:#ddf4ff;border-left:3px solid var(--accent);}
+    .task-row.selected{padding-left:11px;}
+    .task-check{width:16px;height:16px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;margin-top:2px;cursor:pointer;}
+    .task-check.done{background:var(--success);border-color:var(--success);}
+    .task-info{flex:1;min-width:0;}
+    .task-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .task-meta-row{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap;}
+    .task-list-header{padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .task-list-header h3{margin:0;font-size:13px;font-weight:600;}
+    .detail-header{margin-bottom:16px;}
+    .detail-title{font-size:1.2em;font-weight:600;margin-bottom:8px;}
+    .detail-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+    .meta-field{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;}
+    .meta-field label{display:block;color:var(--muted);font-size:11px;margin-bottom:2px;}
+    .meta-field select,.meta-field input{background:none;border:none;padding:0;font-size:12px;font-weight:500;width:auto;}
+    .meta-field select:focus,.meta-field input:focus{outline:none;}
+    .section-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px;}
+    .comment-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;}
+    .comment-body{flex:1;background:var(--bg);border-radius:6px;padding:10px 12px;font-size:13px;border:1px solid var(--border);}
+    .comment-author{font-weight:600;font-size:12px;margin-bottom:3px;}
+    .comment-time{font-size:11px;color:var(--muted);}
+    .subtask-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+    .subtask-row:last-child{border-bottom:none;}
+    .subtask-row input[type="checkbox"]{width:auto;margin:0;}
+    .subtask-label{flex:1;font-size:13px;}
+    .subtask-label.done{text-decoration:line-through;color:var(--muted);}
+  </style>
+</head>
+<body style="height:100vh;display:flex;flex-direction:column;overflow:hidden;">
+<div class="app-shell" style="flex:1;overflow:hidden;">
+  <nav class="sidebar">
+    <div class="sidebar-logo">Nexus <span>PM</span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="index.html" class="sidebar-link"><span class="icon">⬛</span> Dashboard</a>
+    <a href="projects.html" class="sidebar-link"><span class="icon">📁</span> Projects</a>
+    <a href="tasks.html" class="sidebar-link active"><span class="icon">✅</span> My Tasks</a>
+    <a href="team.html" class="sidebar-link"><span class="icon">👥</span> Team</a>
+    <div class="sidebar-section">Manage</div>
+    <a href="reports.html" class="sidebar-link"><span class="icon">📊</span> Reports</a>
+    <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="avatar">GL</div>
+        <div class="sidebar-name">Grace Li<small>Admin</small></div>
+      </div>
+    </div>
+  </nav>
+  <div class="main-area" style="overflow:hidden;">
+    <div class="topbar">
+      <span class="topbar-title">My Tasks</span>
+      <input class="topbar-search" type="search" placeholder="Search tasks…" aria-label="Search tasks" />
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('new-task-form').style.display='block'">+ New Task</button>
+      <div class="avatar topbar-avatar">GL</div>
+    </div>
+    <div class="task-layout">
+      <div class="task-list">
+        <div class="task-list-header">
+          <h3>47 open tasks</h3>
+          <select aria-label="Group by" style="width:auto;padding:3px 7px;font-size:12px;">
+            <option>Group: Priority</option>
+            <option>Group: Project</option>
+            <option>Group: Status</option>
+          </select>
+        </div>
+
+        <div style="padding:6px 14px;font-size:11px;font-weight:600;color:var(--danger);text-transform:uppercase;letter-spacing:0.05em;background:var(--bg);border-bottom:1px solid var(--border);">🔴 High Priority</div>
+        <div class="task-row selected" onclick="showDetail(this)">
+          <div class="task-check"></div>
+          <div class="task-info">
+            <div class="task-title">Finalize onboarding copy</div>
+            <div class="task-meta-row">
+              <span class="badge badge-red">High</span>
+              <span class="badge badge-gray">Due Sep 11</span>
+              <span class="badge badge-yellow">In Progress</span>
+            </div>
+          </div>
+        </div>
+        <div class="task-row" onclick="showDetail(this)">
+          <div class="task-check"></div>
+          <div class="task-info">
+            <div class="task-title">Accessibility audit — checkout flow</div>
+            <div class="task-meta-row">
+              <span class="badge badge-red">High</span>
+              <span class="badge badge-gray">Due Sep 18</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:6px 14px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;background:var(--bg);border-bottom:1px solid var(--border);">🔵 Medium Priority</div>
+        <div class="task-row" onclick="showDetail(this)">
+          <div class="task-check"></div>
+          <div class="task-info">
+            <div class="task-title">Review PR #482</div>
+            <div class="task-meta-row">
+              <span class="badge badge-blue">Medium</span>
+              <span class="badge badge-gray">Due Sep 12</span>
+            </div>
+          </div>
+        </div>
+        <div class="task-row" onclick="showDetail(this)">
+          <div class="task-check"></div>
+          <div class="task-info">
+            <div class="task-title">Update Confluence docs for v2 API</div>
+            <div class="task-meta-row">
+              <span class="badge badge-blue">Medium</span>
+              <span class="badge badge-gray">Due Sep 15</span>
+            </div>
+          </div>
+        </div>
+        <div class="task-row" onclick="showDetail(this)">
+          <div class="task-check"></div>
+          <div class="task-info">
+            <div class="task-title">Coordinate with design on modal states</div>
+            <div class="task-meta-row">
+              <span class="badge badge-blue">Medium</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:6px 14px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;background:var(--bg);border-bottom:1px solid var(--border);">⚪ Low Priority</div>
+        <div class="task-row" onclick="showDetail(this)">
+          <div class="task-check"></div>
+          <div class="task-info">
+            <div class="task-title">Investigate flaky test in CI pipeline</div>
+            <div class="task-meta-row">
+              <span class="badge badge-gray">Low</span>
+            </div>
+          </div>
+        </div>
+        <div class="task-row" onclick="showDetail(this)">
+          <div class="task-check"></div>
+          <div class="task-info">
+            <div class="task-title">Archive completed Q3 projects</div>
+            <div class="task-meta-row">
+              <span class="badge badge-gray">Low</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-detail">
+        <!-- New task form (hidden by default) -->
+        <div id="new-task-form" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:18px;">
+          <h3 style="margin:0 0 14px;">New Task</h3>
+          <div class="form-group">
+            <label for="task-name">Task name</label>
+            <input type="text" id="task-name" placeholder="What needs to be done?" />
+          </div>
+          <div class="input-row">
+            <div class="form-group">
+              <label for="task-project">Project</label>
+              <select id="task-project">
+                <option>Platform v2</option>
+                <option>Web Redesign</option>
+                <option>Q4 Launch Prep</option>
+                <option>Mobile App MVP</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="task-priority">Priority</label>
+              <select id="task-priority">
+                <option>High</option>
+                <option selected>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="task-due">Due date</label>
+              <input type="text" id="task-due" placeholder="e.g. Sep 20" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="task-desc">Description</label>
+            <textarea id="task-desc" placeholder="Add context, acceptance criteria, links…"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="document.getElementById('new-task-form').style.display='none'">Create Task</button>
+            <button class="btn btn-outline" onclick="document.getElementById('new-task-form').style.display='none'">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Task detail view -->
+        <div class="detail-header">
+          <div class="breadcrumb">
+            <a href="projects.html">Projects</a>
+            <span class="sep">›</span>
+            <a href="tasks.html">Q4 Launch Prep</a>
+            <span class="sep">›</span>
+            <span class="current">Finalize onboarding copy</span>
+          </div>
+          <div class="detail-title">Finalize onboarding copy</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button class="btn btn-primary btn-sm">Mark Complete</button>
+            <button class="btn btn-outline btn-sm">Edit</button>
+            <button class="btn btn-outline btn-sm">⋯ More</button>
+          </div>
+          <div class="detail-meta">
+            <div class="meta-field">
+              <label>Status</label>
+              <select aria-label="Task status"><option>In Progress</option><option>To Do</option><option>In Review</option><option>Done</option></select>
+            </div>
+            <div class="meta-field">
+              <label>Priority</label>
+              <select aria-label="Task priority"><option>High</option><option>Medium</option><option>Low</option></select>
+            </div>
+            <div class="meta-field">
+              <label>Assignee</label>
+              <select aria-label="Task assignee"><option>Grace Li</option><option>Sam Chen</option><option>Priya Nair</option></select>
+            </div>
+            <div class="meta-field">
+              <label>Due date</label>
+              <input type="text" value="Sep 11, 2026" aria-label="Task due date" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Description</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--text);background:var(--bg);border-radius:6px;padding:12px;margin-bottom:6px;">
+          Write the final copy for all onboarding screens: welcome modal, empty states, tooltip hints, and the completion confirmation. Must pass legal review before ship.<br/><br/>
+          <strong>Acceptance criteria:</strong><br/>
+          • All strings reviewed by Priya<br/>
+          • Legal sign-off on data-collection tooltip<br/>
+          • Localization-ready (no hardcoded plurals, dates)
+        </div>
+
+        <div class="section-label">Sub-tasks</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:6px;">
+          <div class="subtask-row">
+            <input type="checkbox" id="s1" checked /><label class="subtask-label done" for="s1">Draft welcome modal copy</label>
+          </div>
+          <div class="subtask-row">
+            <input type="checkbox" id="s2" checked /><label class="subtask-label done" for="s2">Draft empty state strings (5 screens)</label>
+          </div>
+          <div class="subtask-row">
+            <input type="checkbox" id="s3" /><label class="subtask-label" for="s3">Legal review — data tooltip</label>
+          </div>
+          <div class="subtask-row">
+            <input type="checkbox" id="s4" /><label class="subtask-label" for="s4">Final sign-off from Priya</label>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" style="margin-bottom:16px;">+ Add sub-task</button>
+
+        <div class="section-label">Comments (2)</div>
+        <div class="comment-row">
+          <div class="avatar" style="width:28px;height:28px;font-size:11px;background:#1a7f37;">PN</div>
+          <div class="comment-body">
+            <div class="comment-author">Priya Nair <span class="comment-time">· 2 hours ago</span></div>
+            Draft for the welcome modal looks great — just need to soften the "we collect data" language in paragraph 3 before legal sees it.
+          </div>
+        </div>
+        <div class="comment-row">
+          <div class="avatar" style="width:28px;height:28px;font-size:11px;background:#0969da;">GL</div>
+          <div class="comment-body">
+            <div class="comment-author">Grace Li <span class="comment-time">· 1 hour ago</span></div>
+            Updated — changed "we collect" to "we may use" and added the opt-out link. Ready for legal now.
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <div class="avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0;background:#0969da;">GL</div>
+          <div style="flex:1;">
+            <textarea placeholder="Leave a comment…" style="height:60px;font-size:13px;"></textarea>
+            <button class="btn btn-primary btn-sm" style="margin-top:6px;">Comment</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function showDetail(row) {
+  document.querySelectorAll('.task-row').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+}
+</script>
+</body>
+</html>

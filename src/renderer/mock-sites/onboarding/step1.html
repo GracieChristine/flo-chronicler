@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ramp Up — Welcome</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    body{background:#f5f7fa;min-height:100vh;display:flex;flex-direction:column;}
+    .onboard-header{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+    .onboard-logo{font-size:1.1em;font-weight:700;}
+    .onboard-logo span{color:var(--accent);}
+    .onboard-help{font-size:13px;color:var(--muted);}
+    .onboard-body{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;}
+    .onboard-card{background:#fff;border:1px solid var(--border);border-radius:12px;width:100%;max-width:540px;padding:36px 40px;}
+    .step-indicator{display:flex;align-items:center;margin-bottom:28px;}
+    .step-pill{flex:1;height:4px;background:var(--border);border-radius:2px;margin-right:4px;}
+    .step-pill:last-child{margin-right:0;}
+    .step-pill.done{background:var(--accent);}
+    .step-pill.active{background:var(--accent);opacity:0.45;}
+    .onboard-icon{font-size:2em;margin-bottom:12px;}
+    .onboard-title{font-size:1.4em;font-weight:700;margin-bottom:6px;}
+    .onboard-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+    .nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:24px;}
+    .skip-link{font-size:13px;color:var(--muted);cursor:pointer;text-decoration:underline;}
+    .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .role-card{border:2px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;text-align:center;transition:all 0.15s;}
+    .role-card:hover{border-color:var(--accent);background:#f0f7ff;}
+    .role-card.selected{border-color:var(--accent);background:#ddf4ff;}
+    .role-icon{font-size:1.8em;margin-bottom:6px;}
+    .role-label{font-size:13px;font-weight:500;}
+    .role-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+    .strength-bar{height:5px;background:var(--bg);border-radius:3px;margin-top:6px;overflow:hidden;}
+    .strength-fill{height:100%;border-radius:3px;transition:width 0.2s,background 0.2s;}
+    .strength-label{font-size:11px;color:var(--muted);margin-top:3px;}
+    .field-note{font-size:11px;color:var(--muted);margin-top:3px;}
+  </style>
+</head>
+<body>
+<header class="onboard-header">
+  <div class="onboard-logo">Ramp<span>Up</span></div>
+  <div class="onboard-help">Need help? <a href="#">Contact support</a></div>
+</header>
+
+<div class="onboard-body">
+  <div class="onboard-card">
+    <div class="step-indicator">
+      <div class="step-pill active"></div>
+      <div class="step-pill"></div>
+      <div class="step-pill"></div>
+      <div class="step-pill"></div>
+    </div>
+
+    <div class="onboard-icon">👋</div>
+    <h1 class="onboard-title">Welcome! Let's set up your account</h1>
+    <p class="onboard-sub">This takes about 3 minutes. We'll get your profile ready so your team can find and collaborate with you right away.</p>
+
+    <div class="form-group">
+      <label for="full-name">Full name</label>
+      <input type="text" id="full-name" placeholder="e.g. Grace Li" autofocus />
+    </div>
+
+    <div class="form-group">
+      <label for="work-email">Work email</label>
+      <input type="email" id="work-email" placeholder="you@company.com" />
+      <div class="field-note">Use your company email so teammates can find you automatically.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Create a password</label>
+      <input type="password" id="password" placeholder="Min 12 characters" oninput="updateStrength(this.value)" />
+      <div class="strength-bar"><div class="strength-fill" id="strength-fill" style="width:0%;background:var(--danger);"></div></div>
+      <div class="strength-label" id="strength-label">Enter a password to see its strength</div>
+    </div>
+
+    <div class="form-group">
+      <label for="confirm-pw">Confirm password</label>
+      <input type="password" id="confirm-pw" placeholder="Re-enter password" />
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label class="checkbox-label">
+        <input type="checkbox" id="agree" />
+        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" checked />
+        Send me product updates and tips (unsubscribe anytime)
+      </label>
+    </div>
+
+    <div class="nav-row">
+      <span></span>
+      <button class="btn btn-primary" onclick="location.href='step2.html'" style="min-width:160px;justify-content:center;">
+        Continue → <span style="font-size:11px;opacity:0.8;">&nbsp;Step 2 of 4</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateStrength(val) {
+  const fill = document.getElementById('strength-fill');
+  const label = document.getElementById('strength-label');
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (val.length >= 12) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const pct = (score / 5) * 100;
+  const colors = ['#cf222e','#cf222e','#9a6700','#d4a72c','#1a7f37','#1a7f37'];
+  const labels = ['','Weak','Weak','Fair','Good','Strong'];
+  fill.style.width = pct + '%';
+  fill.style.background = colors[score];
+  label.textContent = val.length ? labels[score] : 'Enter a password to see its strength';
+}
+</script>
+</body>
+</html>

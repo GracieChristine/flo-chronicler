@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ShopFlow — Your Cart</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    :root{--sidebar:#fff;}
+    .shop-header{background:#fff;border-bottom:1px solid var(--border);}
+    .header-top{max-width:1200px;margin:0 auto;padding:0 20px;height:56px;display:flex;align-items:center;gap:16px;}
+    .shop-logo{font-size:1.2em;font-weight:800;color:var(--text);}
+    .shop-logo span{color:var(--accent);}
+    .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
+    .cart-btn{position:relative;background:none;border:none;font-size:1.2em;cursor:pointer;padding:4px;}
+    .cart-count{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+    .page-wrap{max-width:980px;margin:0 auto;padding:28px 20px;}
+    .cart-layout{display:flex;gap:24px;flex-wrap:wrap;}
+    .cart-items{flex:2;min-width:300px;}
+    .cart-summary{flex:1;min-width:240px;}
+    .cart-row{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+    .cart-row:first-child{border-top:1px solid var(--border);}
+    .cart-thumb{width:80px;height:80px;background:linear-gradient(135deg,#e8eaf6,#c5cae9);border-radius:6px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2em;flex-shrink:0;}
+    .cart-info{flex:1;}
+    .cart-brand{font-size:11px;color:var(--muted);}
+    .cart-name{font-size:13px;font-weight:500;margin:2px 0 4px;}
+    .cart-variant{font-size:12px;color:var(--muted);}
+    .cart-row-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+    .qty-row{display:flex;align-items:center;gap:6px;}
+    .qty-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;font-size:1.1em;display:flex;align-items:center;justify-content:center;}
+    .qty-val{width:36px;text-align:center;border:1px solid var(--border);border-radius:4px;padding:4px;font-size:13px;}
+    .cart-price{font-size:15px;font-weight:700;}
+    .remove-link{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;margin-top:4px;display:inline-block;}
+    .summary-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;position:sticky;top:20px;}
+    .summary-card h2{font-size:1em;font-weight:600;margin:0 0 16px;}
+    .summary-line{display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px;}
+    .summary-line.total{font-weight:700;font-size:1.05em;border-top:1px solid var(--border);padding-top:12px;margin-top:4px;}
+    .promo-row{display:flex;gap:6px;margin:12px 0;}
+    .promo-row input{flex:1;}
+    .empty-cart{text-align:center;padding:48px 24px;}
+    .empty-icon{font-size:3em;margin-bottom:12px;}
+  </style>
+</head>
+<body>
+<header class="shop-header">
+  <div class="header-top">
+    <div class="shop-logo">Shop<span>Flow</span></div>
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-outline btn-sm">← Continue shopping</a>
+      <button class="cart-btn" aria-label="Shopping cart, 2 items">🛒<span class="cart-count" id="cart-count">2</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="page-wrap">
+  <h1 style="font-size:1.3em;font-weight:700;margin-bottom:24px;">Your Cart (2 items)</h1>
+  <div class="cart-layout">
+    <div class="cart-items" id="cart-items">
+      <!-- Item 1 -->
+      <div class="cart-row" id="item-1">
+        <div class="cart-thumb">🎧</div>
+        <div class="cart-info">
+          <div class="cart-brand">TechPlus</div>
+          <div class="cart-name">ANC Pro Headphones</div>
+          <div class="cart-variant">Color: Midnight Black · Wireless</div>
+          <div class="cart-row-bottom">
+            <div class="qty-row">
+              <button class="qty-btn" onclick="changeQty('item-1',-1)" aria-label="Decrease">−</button>
+              <input class="qty-val" id="qty-item-1" type="number" value="1" min="1" max="10" aria-label="Quantity" onchange="updateTotal()" />
+              <button class="qty-btn" onclick="changeQty('item-1',1)" aria-label="Increase">+</button>
+            </div>
+            <div>
+              <div class="cart-price" id="price-item-1">$89.99</div>
+              <span class="remove-link" onclick="removeItem('item-1')">Remove</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 2 -->
+      <div class="cart-row" id="item-2">
+        <div class="cart-thumb" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);">⌨️</div>
+        <div class="cart-info">
+          <div class="cart-brand">Acme Co</div>
+          <div class="cart-name">Mechanical Keyboard — TKL Layout</div>
+          <div class="cart-variant">Switch: Cherry MX Brown · No backlight</div>
+          <div class="cart-row-bottom">
+            <div class="qty-row">
+              <button class="qty-btn" onclick="changeQty('item-2',-1)" aria-label="Decrease">−</button>
+              <input class="qty-val" id="qty-item-2" type="number" value="1" min="1" max="10" aria-label="Quantity" onchange="updateTotal()" />
+              <button class="qty-btn" onclick="changeQty('item-2',1)" aria-label="Increase">+</button>
+            </div>
+            <div>
+              <div class="cart-price" id="price-item-2">$124.00</div>
+              <span class="remove-link" onclick="removeItem('item-2')">Remove</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <a href="index.html" style="font-size:13px;">← Continue shopping</a>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <div class="summary-card">
+        <h2>Order summary</h2>
+        <div class="summary-line"><span>Subtotal (2 items)</span><span id="subtotal">$213.99</span></div>
+        <div class="summary-line"><span>Shipping</span><span style="color:var(--success);">Free</span></div>
+        <div class="summary-line"><span>Estimated tax</span><span id="tax">$17.12</span></div>
+
+        <div class="promo-row">
+          <input type="text" id="promo-code" placeholder="Promo code" aria-label="Promo code" />
+          <button class="btn btn-outline btn-sm" onclick="applyPromo()">Apply</button>
+        </div>
+        <div id="promo-msg" style="font-size:12px;display:none;"></div>
+
+        <div class="summary-line total">
+          <span>Total</span>
+          <span id="total">$231.11</span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="location.href='checkout.html'">Proceed to checkout →</button>
+        <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px;">🔒 Secure SSL encrypted checkout</div>
+        <div style="margin-top:12px;text-align:center;font-size:18px;">💳 🅿 🍎</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const prices = { 'item-1': 89.99, 'item-2': 124.00 };
+
+function changeQty(id, delta) {
+  const inp = document.getElementById('qty-' + id);
+  inp.value = Math.max(1, Math.min(10, parseInt(inp.value) + delta));
+  updateTotal();
+}
+
+function updateTotal() {
+  let sub = 0;
+  Object.keys(prices).forEach(id => {
+    const el = document.getElementById('qty-' + id);
+    if (el && document.getElementById(id)) {
+      const qty = parseInt(el.value) || 1;
+      const line = prices[id] * qty;
+      document.getElementById('price-' + id).textContent = '$' + line.toFixed(2);
+      sub += line;
+    }
+  });
+  const tax = sub * 0.08;
+  document.getElementById('subtotal').textContent = '$' + sub.toFixed(2);
+  document.getElementById('tax').textContent = '$' + tax.toFixed(2);
+  document.getElementById('total').textContent = '$' + (sub + tax).toFixed(2);
+}
+
+function removeItem(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.opacity = '0.3';
+    setTimeout(() => { el.remove(); updateTotal(); }, 300);
+    delete prices[id];
+    const remaining = Object.keys(prices).filter(k => document.getElementById(k));
+    document.getElementById('cart-count').textContent = remaining.length;
+  }
+}
+
+function applyPromo() {
+  const code = document.getElementById('promo-code').value.trim().toUpperCase();
+  const msg = document.getElementById('promo-msg');
+  msg.style.display = 'block';
+  if (code === 'FLOW10') {
+    msg.style.color = 'var(--success)';
+    msg.textContent = '✓ Code applied — 10% off!';
+  } else {
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Invalid promo code.';
+  }
+}
+</script>
+</body>
+</html>

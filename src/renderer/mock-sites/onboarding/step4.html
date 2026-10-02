@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ramp Up — Integrations</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    body{background:#f5f7fa;min-height:100vh;display:flex;flex-direction:column;}
+    .onboard-header{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+    .onboard-logo{font-size:1.1em;font-weight:700;}
+    .onboard-logo span{color:var(--accent);}
+    .onboard-body{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;}
+    .onboard-card{background:#fff;border:1px solid var(--border);border-radius:12px;width:100%;max-width:580px;padding:36px 40px;}
+    .step-indicator{display:flex;align-items:center;margin-bottom:28px;}
+    .step-pill{flex:1;height:4px;background:var(--border);border-radius:2px;margin-right:4px;}
+    .step-pill:last-child{margin-right:0;}
+    .step-pill.done{background:var(--accent);}
+    .step-pill.active{background:var(--accent);opacity:0.45;}
+    .onboard-icon{font-size:2em;margin-bottom:12px;}
+    .onboard-title{font-size:1.4em;font-weight:700;margin-bottom:6px;}
+    .onboard-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+    .nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:24px;}
+    .integration-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+    .integration-card{border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.15s;}
+    .integration-card:hover{border-color:var(--accent);background:#f8faff;}
+    .integration-card.connected{border-color:var(--success);background:#f0fff4;}
+    .integration-icon{font-size:1.6em;flex-shrink:0;}
+    .integration-info{flex:1;}
+    .integration-name{font-size:13px;font-weight:600;}
+    .integration-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+    .integration-action{font-size:12px;flex-shrink:0;}
+    .connect-btn{font-size:12px;color:var(--accent);background:none;border:1px solid var(--accent);border-radius:4px;padding:3px 8px;cursor:pointer;}
+    .connected-badge{font-size:12px;color:var(--success);}
+    .import-section{background:var(--bg);border-radius:8px;padding:14px;margin-bottom:18px;}
+    .import-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:6px 0;}
+    .import-row:not(:last-child){border-bottom:1px solid var(--border);}
+    .import-icon{font-size:1.1em;margin-right:8px;}
+  </style>
+</head>
+<body>
+<header class="onboard-header">
+  <div class="onboard-logo">Ramp<span>Up</span></div>
+  <a href="step3.html" style="font-size:13px;color:var(--muted);">← Back</a>
+</header>
+
+<div class="onboard-body">
+  <div class="onboard-card">
+    <div class="step-indicator">
+      <div class="step-pill done"></div>
+      <div class="step-pill done"></div>
+      <div class="step-pill done"></div>
+      <div class="step-pill active"></div>
+    </div>
+
+    <div class="onboard-icon">🔌</div>
+    <h1 class="onboard-title">Connect your tools</h1>
+    <p class="onboard-sub">Ramp Up works alongside the tools you already use. Connect them now or skip and do this later from Settings → Integrations.</p>
+
+    <div class="integration-grid">
+      <div class="integration-card connected" id="intg-slack">
+        <div class="integration-icon">💬</div>
+        <div class="integration-info">
+          <div class="integration-name">Slack</div>
+          <div class="integration-desc">Task notifications, /rampup slash command</div>
+        </div>
+        <span class="connected-badge">✓ Connected</span>
+      </div>
+      <div class="integration-card" id="intg-github" onclick="connectIntegration('github',this)">
+        <div class="integration-icon">🐙</div>
+        <div class="integration-info">
+          <div class="integration-name">GitHub</div>
+          <div class="integration-desc">Link PRs and commits to tasks</div>
+        </div>
+        <button class="connect-btn" onclick="event.stopPropagation();connectIntegration('github',this.closest('.integration-card'))">Connect</button>
+      </div>
+      <div class="integration-card" id="intg-figma" onclick="connectIntegration('figma',this)">
+        <div class="integration-icon">🎨</div>
+        <div class="integration-info">
+          <div class="integration-name">Figma</div>
+          <div class="integration-desc">Embed designs and specs in tasks</div>
+        </div>
+        <button class="connect-btn" onclick="event.stopPropagation();connectIntegration('figma',this.closest('.integration-card'))">Connect</button>
+      </div>
+      <div class="integration-card" id="intg-jira" onclick="connectIntegration('jira',this)">
+        <div class="integration-icon">📋</div>
+        <div class="integration-info">
+          <div class="integration-name">Jira</div>
+          <div class="integration-desc">Sync issues and epics bi-directionally</div>
+        </div>
+        <button class="connect-btn" onclick="event.stopPropagation();connectIntegration('jira',this.closest('.integration-card'))">Connect</button>
+      </div>
+      <div class="integration-card" id="intg-google" onclick="connectIntegration('google',this)">
+        <div class="integration-icon">📅</div>
+        <div class="integration-info">
+          <div class="integration-name">Google Calendar</div>
+          <div class="integration-desc">See task due dates in your calendar</div>
+        </div>
+        <button class="connect-btn" onclick="event.stopPropagation();connectIntegration('google',this.closest('.integration-card'))">Connect</button>
+      </div>
+      <div class="integration-card" id="intg-confluence" onclick="connectIntegration('confluence',this)">
+        <div class="integration-icon">📖</div>
+        <div class="integration-info">
+          <div class="integration-name">Confluence</div>
+          <div class="integration-desc">Attach and create Confluence pages</div>
+        </div>
+        <button class="connect-btn" onclick="event.stopPropagation();connectIntegration('confluence',this.closest('.integration-card'))">Connect</button>
+      </div>
+    </div>
+
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Import existing work <span style="color:var(--muted);font-weight:400;">(optional)</span></div>
+    <div class="import-section">
+      <div class="import-row">
+        <div><span class="import-icon">📊</span>Import from Asana</div>
+        <button class="btn btn-outline btn-sm">Browse file</button>
+      </div>
+      <div class="import-row">
+        <div><span class="import-icon">🗂️</span>Import from Trello (JSON)</div>
+        <button class="btn btn-outline btn-sm">Browse file</button>
+      </div>
+      <div class="import-row">
+        <div><span class="import-icon">📋</span>Import from CSV</div>
+        <button class="btn btn-outline btn-sm">Browse file</button>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <a href="step3.html" class="btn btn-outline">← Back</a>
+      <button class="btn btn-primary" onclick="location.href='complete.html'" style="min-width:160px;justify-content:center;">
+        Finish setup 🎉
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function connectIntegration(name, card) {
+  card.classList.add('connected');
+  const btn = card.querySelector('.connect-btn');
+  if (btn) {
+    btn.outerHTML = '<span class="connected-badge">✓ Connected</span>';
+  }
+}
+</script>
+</body>
+</html>

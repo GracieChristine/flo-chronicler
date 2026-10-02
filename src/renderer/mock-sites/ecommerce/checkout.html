@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ShopFlow — Checkout</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    :root{--sidebar:#fff;}
+    .shop-header{background:#fff;border-bottom:1px solid var(--border);}
+    .header-top{max-width:1200px;margin:0 auto;padding:0 20px;height:56px;display:flex;align-items:center;gap:16px;}
+    .shop-logo{font-size:1.2em;font-weight:800;color:var(--text);}
+    .shop-logo span{color:var(--accent);}
+    .lock-badge{margin-left:auto;font-size:12px;color:var(--success);display:flex;align-items:center;gap:5px;}
+    .page-wrap{max-width:940px;margin:0 auto;padding:28px 20px;}
+    .checkout-layout{display:flex;gap:28px;flex-wrap:wrap;}
+    .checkout-form-col{flex:3;min-width:300px;}
+    .checkout-summary-col{flex:2;min-width:260px;}
+    .section-header{font-size:0.95em;font-weight:700;margin:22px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+    .section-header:first-of-type{margin-top:0;}
+    .card-row{display:flex;gap:8px;align-items:center;}
+    .card-icon{font-size:1.5em;}
+    .card-num-input{flex:2;}
+    .card-exp{flex:1;}
+    .card-cvv{flex:1;}
+    .order-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .order-item:last-of-type{border-bottom:none;}
+    .order-thumb{width:48px;height:48px;background:linear-gradient(135deg,#e8eaf6,#c5cae9);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.4em;flex-shrink:0;}
+    .order-name{flex:1;font-size:13px;font-weight:500;}
+    .order-price{font-size:13px;font-weight:600;}
+    .summary-sticky{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;position:sticky;top:20px;}
+    .summary-line{display:flex;justify-content:space-between;font-size:13px;margin-bottom:9px;}
+    .summary-line.total{font-weight:700;font-size:1.05em;border-top:1px solid var(--border);padding-top:10px;margin-top:4px;}
+    .secure-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--muted);}
+    .secure-badge{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 8px;}
+    .field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    .steps-mini{display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;}
+    .step-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0;}
+    .step-dot.active{border-color:var(--accent);color:var(--accent);}
+    .step-dot.done{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .step-line{flex:1;height:1px;background:var(--border);}
+    .step-label{font-size:11px;color:var(--muted);}
+    .step-label.active{color:var(--text);font-weight:500;}
+  </style>
+</head>
+<body>
+<header class="shop-header">
+  <div class="header-top">
+    <div class="shop-logo">Shop<span>Flow</span></div>
+    <div class="lock-badge">🔒 Secure checkout</div>
+  </div>
+</header>
+
+<div class="page-wrap">
+  <div class="steps-mini">
+    <div class="step-dot done">✓</div><span class="step-label">Cart</span>
+    <div class="step-line"></div>
+    <div class="step-dot active">2</div><span class="step-label active">Details</span>
+    <div class="step-line"></div>
+    <div class="step-dot">3</div><span class="step-label">Payment</span>
+    <div class="step-line"></div>
+    <div class="step-dot">4</div><span class="step-label">Confirm</span>
+  </div>
+
+  <div class="checkout-layout">
+    <div class="checkout-form-col">
+      <!-- Contact -->
+      <div class="section-header">Contact information</div>
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" placeholder="you@example.com" />
+      </div>
+      <label class="checkbox-label" style="margin-bottom:14px;">
+        <input type="checkbox" checked /> Email me with news and offers
+      </label>
+
+      <!-- Shipping -->
+      <div class="section-header">Shipping address</div>
+      <div class="input-row">
+        <div class="form-group">
+          <label for="first-name">First name</label>
+          <input type="text" id="first-name" placeholder="Grace" />
+        </div>
+        <div class="form-group">
+          <label for="last-name">Last name</label>
+          <input type="text" id="last-name" placeholder="Li" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="address">Street address</label>
+        <input type="text" id="address" placeholder="123 Main St" />
+      </div>
+      <div class="form-group">
+        <label for="apt">Apartment, suite, etc. <span style="color:var(--muted);font-size:12px;">(optional)</span></label>
+        <input type="text" id="apt" placeholder="Apt 4B" />
+      </div>
+      <div class="field-row-3">
+        <div class="form-group">
+          <label for="city">City</label>
+          <input type="text" id="city" placeholder="Dublin" />
+        </div>
+        <div class="form-group">
+          <label for="country">Country</label>
+          <select id="country">
+            <option>Ireland</option>
+            <option>United Kingdom</option>
+            <option>United States</option>
+            <option>Germany</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="eircode">Eircode / Postcode</label>
+          <input type="text" id="eircode" placeholder="D01 X2Y3" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone (for delivery updates)</label>
+        <input type="tel" id="phone" placeholder="+353 …" />
+      </div>
+
+      <!-- Shipping method -->
+      <div class="section-header">Shipping method</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+        <label class="radio-label" style="padding:10px 12px;border:2px solid var(--accent);border-radius:6px;background:#ddf4ff;">
+          <input type="radio" name="ship" value="free" checked /> Standard shipping (3–5 days) <strong style="margin-left:auto;">Free</strong>
+        </label>
+        <label class="radio-label" style="padding:10px 12px;border:1px solid var(--border);border-radius:6px;">
+          <input type="radio" name="ship" value="express" /> Express shipping (1–2 days) <strong style="margin-left:auto;">$9.99</strong>
+        </label>
+        <label class="radio-label" style="padding:10px 12px;border:1px solid var(--border);border-radius:6px;">
+          <input type="radio" name="ship" value="overnight" /> Overnight <strong style="margin-left:auto;">$19.99</strong>
+        </label>
+      </div>
+
+      <!-- Payment -->
+      <div class="section-header">Payment</div>
+      <div class="alert alert-info" style="font-size:12px;">All transactions are encrypted and secured with TLS 1.3.</div>
+      <div class="form-group">
+        <label for="card-num">Card number</label>
+        <div class="card-row">
+          <span class="card-icon">💳</span>
+          <input class="card-num-input" type="text" id="card-num" placeholder="1234 5678 9012 3456" maxlength="19" />
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="form-group">
+          <label for="card-name">Name on card</label>
+          <input type="text" id="card-name" placeholder="Grace Li" />
+        </div>
+        <div class="form-group" style="flex:0.5;">
+          <label for="exp">Expiry</label>
+          <input type="text" id="exp" placeholder="MM / YY" maxlength="7" />
+        </div>
+        <div class="form-group" style="flex:0.4;">
+          <label for="cvv">CVV</label>
+          <input type="text" id="cvv" placeholder="•••" maxlength="4" />
+        </div>
+      </div>
+      <label class="checkbox-label">
+        <input type="checkbox" /> Save card for future purchases
+      </label>
+
+      <div class="btn-row" style="margin-top:20px;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="location.href='confirm.html'">Place order — $231.11</button>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;">By placing your order, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</div>
+    </div>
+
+    <div class="checkout-summary-col">
+      <div class="summary-sticky">
+        <h3 style="margin:0 0 14px;font-size:0.95em;font-weight:600;">Order summary (2 items)</h3>
+        <div class="order-item">
+          <div class="order-thumb">🎧</div>
+          <div class="order-name">TechPlus ANC Pro Headphones<br/><span style="font-size:11px;color:var(--muted);">Midnight Black · Qty 1</span></div>
+          <div class="order-price">$89.99</div>
+        </div>
+        <div class="order-item">
+          <div class="order-thumb" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);">⌨️</div>
+          <div class="order-name">Mechanical Keyboard TKL<br/><span style="font-size:11px;color:var(--muted);">Cherry MX Brown · Qty 1</span></div>
+          <div class="order-price">$124.00</div>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="summary-line"><span>Subtotal</span><span>$213.99</span></div>
+          <div class="summary-line"><span>Shipping</span><span style="color:var(--success);">Free</span></div>
+          <div class="summary-line"><span>Tax (8%)</span><span>$17.12</span></div>
+          <div class="summary-line total"><span>Total</span><span>$231.11</span></div>
+        </div>
+        <div class="secure-badges">
+          <span class="secure-badge">🔒 SSL</span>
+          <span class="secure-badge">↩ 30-day returns</span>
+          <span class="secure-badge">🛡 Buyer protection</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

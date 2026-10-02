@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ramp Up — Workspace Setup</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    body{background:#f5f7fa;min-height:100vh;display:flex;flex-direction:column;}
+    .onboard-header{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+    .onboard-logo{font-size:1.1em;font-weight:700;}
+    .onboard-logo span{color:var(--accent);}
+    .onboard-body{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;}
+    .onboard-card{background:#fff;border:1px solid var(--border);border-radius:12px;width:100%;max-width:560px;padding:36px 40px;}
+    .step-indicator{display:flex;align-items:center;margin-bottom:28px;}
+    .step-pill{flex:1;height:4px;background:var(--border);border-radius:2px;margin-right:4px;}
+    .step-pill:last-child{margin-right:0;}
+    .step-pill.done{background:var(--accent);}
+    .step-pill.active{background:var(--accent);opacity:0.45;}
+    .onboard-icon{font-size:2em;margin-bottom:12px;}
+    .onboard-title{font-size:1.4em;font-weight:700;margin-bottom:6px;}
+    .onboard-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+    .nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:24px;}
+    .invite-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+    .invite-row input{flex:1;}
+    .invite-row select{width:auto;flex-shrink:0;}
+    .invite-row .btn-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px;}
+    .invite-row .btn-remove:hover{color:var(--danger);}
+    .invited-tag{display:inline-flex;align-items:center;gap:5px;background:#ddf4ff;border:1px solid #9ecbff;border-radius:4px;padding:3px 8px;font-size:12px;margin:3px;}
+    .invited-tag button{background:none;border:none;cursor:pointer;color:var(--accent);padding:0;font-size:14px;line-height:1;}
+    #invite-list{min-height:20px;margin-bottom:12px;}
+    .ws-logo-picker{display:flex;gap:10px;align-items:center;margin-bottom:16px;}
+    .logo-option{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3em;border:2px solid var(--border);cursor:pointer;}
+    .logo-option.selected{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,0.2);}
+    .color-dot{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;}
+    .color-dot.selected{border-color:var(--text);box-shadow:0 0 0 2px var(--surface);}
+    .template-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+    .template-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;}
+    .template-item:hover{background:var(--bg);}
+    .template-item input[type="radio"]{width:auto;margin:0;}
+    .template-icon{font-size:1.3em;width:26px;text-align:center;flex-shrink:0;}
+    .template-info{flex:1;}
+    .template-name{font-size:13px;font-weight:500;}
+    .template-desc{font-size:11px;color:var(--muted);}
+  </style>
+</head>
+<body>
+<header class="onboard-header">
+  <div class="onboard-logo">Ramp<span>Up</span></div>
+  <a href="step2.html" style="font-size:13px;color:var(--muted);">← Back</a>
+</header>
+
+<div class="onboard-body">
+  <div class="onboard-card">
+    <div class="step-indicator">
+      <div class="step-pill done"></div>
+      <div class="step-pill done"></div>
+      <div class="step-pill active"></div>
+      <div class="step-pill"></div>
+    </div>
+
+    <div class="onboard-icon">🏢</div>
+    <h1 class="onboard-title">Set up your workspace</h1>
+    <p class="onboard-sub">Name your workspace and pick a starter template. You can always change this later.</p>
+
+    <div class="form-group">
+      <label for="ws-name">Workspace name</label>
+      <input type="text" id="ws-name" value="Poppulo Design Team" placeholder="e.g. Acme Engineering" />
+    </div>
+
+    <div class="form-group">
+      <label>Workspace icon</label>
+      <div class="ws-logo-picker">
+        <div class="logo-option selected" onclick="selectLogo(this)" style="background:#ddf4ff;">🎨</div>
+        <div class="logo-option" onclick="selectLogo(this)" style="background:#dafbe1;">🚀</div>
+        <div class="logo-option" onclick="selectLogo(this)" style="background:#fff8c5;">⚡</div>
+        <div class="logo-option" onclick="selectLogo(this)" style="background:#ffebe9;">🔥</div>
+        <div class="logo-option" onclick="selectLogo(this)" style="background:#f3e5f5;">💡</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Brand colour</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div class="color-dot selected" style="background:#0969da;" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#1a7f37;" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#9a6700;" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#8250df;" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#cf222e;" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#24292f;" onclick="selectColor(this)"></div>
+        <input type="color" value="#0969da" style="width:28px;height:24px;border-radius:4px;border:1px solid var(--border);padding:2px;cursor:pointer;" title="Custom color" />
+      </div>
+    </div>
+
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Start from a template</div>
+    <div class="template-list">
+      <label class="template-item">
+        <input type="radio" name="tmpl" value="blank" />
+        <span class="template-icon">📄</span>
+        <div class="template-info">
+          <div class="template-name">Blank workspace</div>
+          <div class="template-desc">Start from scratch with empty boards and docs</div>
+        </div>
+      </label>
+      <label class="template-item" style="border-color:var(--accent);background:#f8faff;">
+        <input type="radio" name="tmpl" value="design" checked />
+        <span class="template-icon">🎨</span>
+        <div class="template-info">
+          <div class="template-name">Design team <span class="badge badge-blue">Recommended</span></div>
+          <div class="template-desc">Sprint board, design review process, feedback templates, Figma integration</div>
+        </div>
+      </label>
+      <label class="template-item">
+        <input type="radio" name="tmpl" value="eng" />
+        <span class="template-icon">💻</span>
+        <div class="template-info">
+          <div class="template-name">Engineering</div>
+          <div class="template-desc">Bug tracker, incident log, sprint planning, GitHub integration</div>
+        </div>
+      </label>
+      <label class="template-item">
+        <input type="radio" name="tmpl" value="product" />
+        <span class="template-icon">🗺️</span>
+        <div class="template-info">
+          <div class="template-name">Product management</div>
+          <div class="template-desc">Roadmap, PRD templates, prioritisation matrix, OKR tracker</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="form-group" style="margin-bottom:6px;">
+      <label>Invite teammates <span style="color:var(--muted);font-size:12px;">(optional)</span></label>
+    </div>
+    <div id="invite-list"></div>
+    <div class="invite-row" id="invite-input-row">
+      <input type="email" id="invite-email" placeholder="colleague@company.com" aria-label="Invite email" onkeydown="if(event.key==='Enter')addInvite()" />
+      <select aria-label="Role" id="invite-role">
+        <option>Editor</option>
+        <option>Viewer</option>
+        <option>Admin</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="addInvite()">Add</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px;">Press Enter or click Add to queue an invite. Invites send when you click Finish.</div>
+
+    <div class="nav-row">
+      <a href="step2.html" class="btn btn-outline">← Back</a>
+      <button class="btn btn-primary" onclick="location.href='step4.html'" style="min-width:160px;justify-content:center;">
+        Continue → <span style="font-size:11px;opacity:0.8;">&nbsp;Step 4 of 4</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectLogo(el) {
+  document.querySelectorAll('.logo-option').forEach(l => l.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectColor(el) {
+  document.querySelectorAll('.color-dot').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function addInvite() {
+  const email = document.getElementById('invite-email').value.trim();
+  const role = document.getElementById('invite-role').value;
+  if (!email || !email.includes('@')) return;
+  const list = document.getElementById('invite-list');
+  const tag = document.createElement('span');
+  tag.className = 'invited-tag';
+  tag.innerHTML = `${email} <em style="color:var(--muted);font-size:10px;">${role}</em> <button onclick="this.parentElement.remove()" aria-label="Remove">×</button>`;
+  list.appendChild(tag);
+  document.getElementById('invite-email').value = '';
+}
+</script>
+</body>
+</html>

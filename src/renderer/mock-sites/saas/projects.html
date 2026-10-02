@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nexus — Projects</title>
+  <link rel="stylesheet" href="../shared.css" />
+  <style>
+    .project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:18px;}
+    .proj-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;cursor:pointer;transition:box-shadow 0.15s;}
+    .proj-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+    .proj-icon{font-size:1.6em;margin-bottom:10px;}
+    .proj-name{font-size:0.95em;font-weight:600;margin-bottom:5px;}
+    .proj-desc{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.4;}
+    .proj-meta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);}
+    .proj-progress{height:5px;background:var(--bg);border-radius:3px;margin-bottom:8px;overflow:hidden;}
+    .proj-bar{height:100%;background:var(--accent);border-radius:3px;}
+    .member-stack{display:flex;}
+    .member-stack .avatar{width:22px;height:22px;font-size:9px;border:2px solid var(--surface);margin-left:-6px;}
+    .member-stack .avatar:first-child{margin-left:0;}
+    .filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+    .filter-bar select{width:auto;padding:6px 10px;}
+    .new-proj-card{background:var(--bg);border:2px dashed var(--border);border-radius:8px;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;cursor:pointer;color:var(--muted);font-size:13px;}
+    .new-proj-card:hover{border-color:var(--accent);color:var(--accent);}
+    .new-proj-icon{font-size:2em;}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="sidebar-logo">Nexus <span>PM</span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="index.html" class="sidebar-link"><span class="icon">⬛</span> Dashboard</a>
+    <a href="projects.html" class="sidebar-link active"><span class="icon">📁</span> Projects</a>
+    <a href="tasks.html" class="sidebar-link"><span class="icon">✅</span> My Tasks</a>
+    <a href="team.html" class="sidebar-link"><span class="icon">👥</span> Team</a>
+    <div class="sidebar-section">Manage</div>
+    <a href="reports.html" class="sidebar-link"><span class="icon">📊</span> Reports</a>
+    <a href="settings.html" class="sidebar-link"><span class="icon">⚙️</span> Settings</a>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="avatar">GL</div>
+        <div class="sidebar-name">Grace Li<small>Admin</small></div>
+      </div>
+    </div>
+  </nav>
+  <div class="main-area">
+    <div class="topbar">
+      <span class="topbar-title">Projects</span>
+      <input class="topbar-search" type="search" placeholder="Search projects…" aria-label="Search projects" />
+      <button class="btn btn-primary btn-sm" onclick="location.href='new-project.html'">+ New Project</button>
+      <div class="avatar topbar-avatar">GL</div>
+    </div>
+    <div class="page-content">
+      <div class="filter-bar" style="margin-bottom:4px;">
+        <select aria-label="Filter by status">
+          <option>All statuses</option>
+          <option>Active</option>
+          <option>On Hold</option>
+          <option>Completed</option>
+        </select>
+        <select aria-label="Filter by team">
+          <option>All teams</option>
+          <option>Engineering</option>
+          <option>Design</option>
+          <option>Product</option>
+        </select>
+        <select aria-label="Sort by">
+          <option>Sort: Last updated</option>
+          <option>Sort: Name A–Z</option>
+          <option>Sort: Due date</option>
+          <option>Sort: Progress</option>
+        </select>
+      </div>
+
+      <div class="project-grid">
+        <div class="proj-card" onclick="location.href='tasks.html'">
+          <div class="proj-icon">🚀</div>
+          <div class="proj-name">Platform v2</div>
+          <div class="proj-desc">Full backend rewrite with new API gateway, auth service, and event streaming pipeline.</div>
+          <div class="proj-progress"><div class="proj-bar" style="width:62%"></div></div>
+          <div class="proj-meta">
+            <span>62% · 23 tasks left</span>
+            <div class="member-stack">
+              <div class="avatar" style="background:#0969da">SC</div>
+              <div class="avatar" style="background:#1a7f37">PN</div>
+              <div class="avatar" style="background:#cf222e">AK</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <span class="badge badge-green">Active</span>
+            <span class="badge badge-gray">Due Oct 31</span>
+          </div>
+        </div>
+
+        <div class="proj-card" onclick="location.href='tasks.html'">
+          <div class="proj-icon">🎨</div>
+          <div class="proj-name">Web Redesign</div>
+          <div class="proj-desc">Full visual overhaul of the marketing site and in-app UI, aligned to new brand guidelines.</div>
+          <div class="proj-progress"><div class="proj-bar" style="width:35%"></div></div>
+          <div class="proj-meta">
+            <span>35% · 41 tasks left</span>
+            <div class="member-stack">
+              <div class="avatar" style="background:#8250df">MR</div>
+              <div class="avatar" style="background:#0969da">GL</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <span class="badge badge-green">Active</span>
+            <span class="badge badge-red">Due Sep 30</span>
+          </div>
+        </div>
+
+        <div class="proj-card" onclick="location.href='tasks.html'">
+          <div class="proj-icon">📦</div>
+          <div class="proj-name">Q4 Launch Prep</div>
+          <div class="proj-desc">Coordinate cross-functional readiness for the Q4 product launch: comms, support, infra, legal.</div>
+          <div class="proj-progress"><div class="proj-bar" style="width:18%"></div></div>
+          <div class="proj-meta">
+            <span>18% · 56 tasks left</span>
+            <div class="member-stack">
+              <div class="avatar" style="background:#0969da">GL</div>
+              <div class="avatar" style="background:#1a7f37">SC</div>
+              <div class="avatar" style="background:var(--muted)">+2</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <span class="badge badge-green">Active</span>
+            <span class="badge badge-gray">Due Dec 1</span>
+          </div>
+        </div>
+
+        <div class="proj-card" onclick="location.href='tasks.html'">
+          <div class="proj-icon">📱</div>
+          <div class="proj-name">Mobile App MVP</div>
+          <div class="proj-desc">iOS and Android companion app covering the top 5 user workflows from the web product.</div>
+          <div class="proj-progress"><div class="proj-bar" style="width:10%"></div></div>
+          <div class="proj-meta">
+            <span>10% · 88 tasks left</span>
+            <div class="member-stack">
+              <div class="avatar" style="background:#cf222e">AK</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px;">
+            <span class="badge badge-yellow">On Hold</span>
+          </div>
+        </div>
+
+        <div class="new-proj-card" onclick="location.href='new-project.html'" role="button" aria-label="Create new project">
+          <div class="new-proj-icon">➕</div>
+          <span>Create new project</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flo, the Chronicler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+
+<div class="toolbar">
+
+  <!-- Brand — persistent across all views -->
+  <div class="toolbar-brand">
+    <img src="../../assets/logo.svg" class="toolbar-brand-logo" alt="" />
+  </div>
+  <span class="toolbar-brand-sep">·</span>
+
+  <!-- Left zone: back link + doc title, fills available space -->
+  <div class="toolbar-left">
+    <!-- "← My Flows" navigates back to the list. JS intercepts to show the
+         unsaved-changes confirm dialog before navigating away in edit mode. -->
+    <a href="#" id="btn-back" class="nav-link toolbar-back-link">My Flows</a>
+    <!-- View mode: title as plain text -->
+    <span id="guide-title-view" class="toolbar-title-view view-only"></span>
+    <!-- Edit mode: title is editable inline -->
+    <input type="text" id="guide-title" class="title-input edit-only" placeholder="Doc title…" />
+  </div>
+
+  <!-- Right zone: version label, export dropdown, edit / save -->
+  <div class="toolbar-right">
+    <span id="guide-version-badge" class="version-badge" title="Saved version"></span>
+
+    <!-- View mode actions -->
+    <a href="index.html" class="btn btn-primary view-only">+ New Recording</a>
+    <button id="btn-edit" class="btn btn-secondary view-only">✏️ Edit</button>
+
+    <!-- Export dropdown (view mode only) -->
+    <div class="export-dropdown view-only">
+      <button class="btn btn-secondary" id="btn-export-toggle">Export ▾</button>
+      <div class="export-dropdown-menu" id="export-dropdown-menu" hidden>
+        <button class="export-dropdown-item" id="btn-export-pdf">Export PDF</button>
+        <button class="export-dropdown-item" id="btn-export-word">Export Word</button>
+        <button class="export-dropdown-item export-dropdown-item--disabled" id="btn-export-confluence" disabled title="Confluence export — coming soon" hidden>Export Confluence</button>
+      </div>
+    </div>
+
+    <!-- Edit mode actions -->
+    <button id="btn-cancel" class="btn btn-secondary edit-only">Cancel</button>
+    <button id="btn-save"   class="btn btn-primary  edit-only">Save</button>
+  </div>
+
+</div>
+
+<!-- Edit mode: step list + add-step button -->
+<div class="editor-body">
+  <div id="editor-steps" class="editor-steps-list"></div>
+  <!-- Outside the re-rendered container so the listener is attached once and survives re-renders -->
+  <button id="btn-add-step" class="btn-add-step edit-only">+ Add Step</button>
+</div>
+
+<!-- Shared hidden file input for screenshot upload / replace (one instance, shared across steps) -->
+<input type="file" id="screenshot-file-input" accept="image/*" style="display:none" />
+
+<!-- ── Split modal ─────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="split-modal-overlay" hidden>
+  <div class="modal">
+    <h2>Split up steps</h2>
+    <p class="modal-desc">Check the actions you want to pull out as their own separate steps. Unchecked actions that stay adjacent will remain grouped together.</p>
+    <div id="split-rows"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-split-cancel">Cancel</button>
+      <button class="btn btn-primary"   id="btn-split-apply">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Version history modal ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="version-modal-overlay" hidden>
+  <div class="modal">
+    <h2>Version history</h2>
+    <p class="modal-desc">Previous saved versions of this guide. Restoring a version opens it in edit mode — your current version is preserved.</p>
+    <div id="version-rows"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-version-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Annotation (redact) modal ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="redact-modal-overlay" hidden>
+  <div class="modal redact-modal">
+    <div class="redact-toolbar">
+      <div class="redact-tools">
+        <button class="btn btn-ghost tool-btn active" data-tool="rect"  title="Rectangle">▭ Rect</button>
+        <button class="btn btn-ghost tool-btn"        data-tool="arrow" title="Arrow">↗ Arrow</button>
+        <button class="btn btn-ghost tool-btn"        data-tool="blur"  title="Blur / redact">◫ Blur</button>
+        <button class="btn btn-ghost tool-btn"        data-tool="text"  title="Text callout">T Text</button>
+      </div>
+      <div class="redact-colors">
+        <button class="color-swatch active" data-color="#d6455a" style="background:#d6455a" title="Red"></button>
+        <button class="color-swatch"        data-color="#f0a020" style="background:#f0a020" title="Yellow"></button>
+        <button class="color-swatch"        data-color="#2f9e5b" style="background:#2f9e5b" title="Green"></button>
+        <button class="color-swatch"        data-color="#1971c2" style="background:#1971c2" title="Blue"></button>
+        <button class="color-swatch"        data-color="#1a1a1a" style="background:#1a1a1a" title="Black"></button>
+        <button class="color-swatch"        data-color="#ffffff" style="background:#ffffff; outline: 1px solid #bbb" title="White"></button>
+        <input type="color" id="custom-color" value="#d6455a" title="Custom colour" />
+      </div>
+      <div class="redact-actions">
+        <button class="btn btn-secondary" id="btn-undo-annotation"   disabled>Undo</button>
+        <button class="btn btn-secondary" id="btn-cancel-annotation">Cancel</button>
+        <button class="btn btn-primary"   id="btn-done-annotation">Done</button>
+      </div>
+    </div>
+    <div class="redact-canvas-wrap" id="redact-canvas-wrap">
+      <canvas id="redact-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confluence export modal ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="confluence-modal-overlay" hidden>
+  <div class="modal">
+    <h2>Export to Confluence</h2>
+    <label>Confluence base URL</label>
+    <input type="text" id="cf-base-url" placeholder="https://yoursite.atlassian.net" />
+    <label>Space key</label>
+    <input type="text" id="cf-space-key" placeholder="TEAM" />
+    <label>Email <span style="font-weight:400;color:var(--color-text-faint)">(Cloud only — leave blank for Server/DC)</span></label>
+    <input type="email" id="cf-email" placeholder="you@example.com" />
+    <label>API token / Personal Access Token <span style="font-weight:400;color:var(--color-text-faint)">(never saved)</span></label>
+    <input type="password" id="cf-token" placeholder="Your token" />
+    <label>Page title</label>
+    <input type="text" id="cf-page-title" />
+    <div id="cf-result"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-cf-cancel">Cancel</button>
+      <button class="btn btn-primary"   id="btn-cf-submit">Export</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Styled confirm dialog (replaces native confirm() which shows "flo-chronicler") ── -->
+<div class="modal-overlay" id="confirm-modal-overlay" hidden>
+  <div class="modal confirm-modal">
+    <h2 id="confirm-modal-title">Confirm</h2>
+    <p id="confirm-modal-message" class="modal-desc"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-confirm-cancel">Cancel</button>
+      <button class="btn btn-danger"    id="btn-confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="stepGroups.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>
