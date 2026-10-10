@@ -143,7 +143,7 @@ modeSwitcher.addEventListener('click', async (e) => {
     steps = [];
   }
 
-  window.location.href = newMode === 'desktop'
+  window.location.href = newMode === 'apps'
     ? 'desktop.html?mode=window'
     : 'desktop.html?mode=screen';
 });

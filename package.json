@@ -7,14 +7,17 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "build:icons": "node scripts/build-icons.js",
     "electron:pack": "npm version patch --no-git-tag-version && electron-builder",
     "electron:pack:minor": "npm version minor --no-git-tag-version && electron-builder",
     "electron:pack:major": "npm version major --no-git-tag-version && electron-builder"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "electron": "^31.0.0",
     "electron-builder": "^24.13.3",
-    "electron-reload": "^1.5.0"
+    "electron-reload": "^1.5.0",
+    "to-ico": "^1.1.5"
   },
   "dependencies": {
     "uiohook-napi": "^1.5.5"
@@ -22,7 +25,7 @@
   "build": {
     "appId": "com.internal.flochronicler",
     "productName": "Flo, the Chronicler",
-    "icon": "assets/icon.png",
+    "icon": "assets/icon",
     "directories": {
       "output": "release"
     },

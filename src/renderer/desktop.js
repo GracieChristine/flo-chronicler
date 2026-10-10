@@ -5,7 +5,8 @@
 let recording = false;
 let paused = false;
 let steps = [];
-let selectedSource = null; // { id, name }
+let selectedSource = null; // { id, name, bounds }
+const pendingElements = new Map(); // UIA results keyed by "x,y", applied when step is added
 
 // Derive recording mode from URL param (?mode=screen → monitors, default → windows)
 const _modeParam = new URLSearchParams(window.location.search).get('mode');
@@ -92,6 +93,8 @@ document.getElementById('btn-logo').addEventListener('click', async (e) => {
     recording = false;
     paused    = false;
     window.flo.offDesktopClick();
+    window.flo.offDesktopClickElement();
+    await window.flo.hideDesktopOverlay();
     await window.flo.stopDesktopHook();
   }
   window.location.href = 'guides.html';
@@ -146,7 +149,17 @@ async function loadSources() {
         bounds: card.dataset.bounds ? JSON.parse(card.dataset.bounds) : null
       };
       btnStart.disabled = false;
-      toolbarSourceName.textContent = selectedSource.name;
+
+      // Show border overlay immediately on selection; pre-fetch app window bounds
+      const thisSource = selectedSource;
+      (async () => {
+        if (!thisSource.bounds && String(thisSource.id).startsWith('window:')) {
+          thisSource.bounds = await window.flo.getWindowBounds(thisSource.id);
+        }
+        if (selectedSource !== thisSource) return; // user selected a different card
+        if (thisSource.bounds) await window.flo.showDesktopOverlay(thisSource.bounds);
+        else await window.flo.hideDesktopOverlay();
+      })().catch(() => {});
     });
   });
 }
@@ -158,7 +171,7 @@ document.getElementById('mode-switcher').addEventListener('click', async (e) => 
   const btn = e.target.closest('.mode-switcher-btn');
   if (!btn) return;
   const newMode = btn.dataset.mode;
-  const currentMode = currentSourceType === 'screen' ? 'monitor' : 'desktop';
+  const currentMode = currentSourceType === 'screen' ? 'screen' : 'apps';
   if (newMode === currentMode) return;
 
   if (recording || paused || steps.length > 0) {
@@ -170,6 +183,8 @@ document.getElementById('mode-switcher').addEventListener('click', async (e) => 
       recording = false;
       paused    = false;
       window.flo.offDesktopClick();
+      window.flo.offDesktopClickElement();
+      await window.flo.hideDesktopOverlay();
       await window.flo.stopDesktopHook();
     }
     steps = [];
@@ -177,7 +192,7 @@ document.getElementById('mode-switcher').addEventListener('click', async (e) => 
 
   if (newMode === 'webpage') {
     window.location.href = 'index.html?recorder=1';
-  } else if (newMode === 'desktop') {
+  } else if (newMode === 'apps') {
     window.location.href = 'desktop.html?mode=window';
   } else {
     window.location.href = 'desktop.html?mode=screen';
@@ -215,8 +230,33 @@ function renderStepsList() {
 
 // ── Recording lifecycle ────────────────────────────────────────────────────────
 
+async function startCountdown() {
+  const overlay = document.getElementById('countdown-overlay');
+  const numEl   = document.getElementById('countdown-number');
+  overlay.removeAttribute('hidden');
+  for (let n = 3; n >= 1; n--) {
+    numEl.textContent = String(n);
+    numEl.style.animation = 'none';
+    void numEl.offsetWidth;
+    numEl.style.animation = '';
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  overlay.setAttribute('hidden', '');
+}
+
 btnStart.addEventListener('click', async () => {
   if (!selectedSource) return;
+  btnStart.disabled = true;
+
+  // Hide selection overlay during countdown, re-shown after recording starts
+  // Bounds pre-fetched on card selection; fall back to Flo countdown if unavailable
+  const countdownBounds = selectedSource.bounds ?? null;
+  await window.flo.hideDesktopOverlay();
+  if (countdownBounds) {
+    await window.flo.runDesktopCountdown(countdownBounds);
+  } else {
+    await startCountdown();
+  }
 
   const result = await window.flo.startDesktopHook();
   if (!result || result.ok === false) {
@@ -233,7 +273,18 @@ btnStart.addEventListener('click', async () => {
   paused = false;
 
   window.flo.onDesktopClick(handleDesktopClick);
+  window.flo.onDesktopClickElement(handleDesktopClickElement);
   updateButtons();
+
+  // Show border overlay asynchronously — doesn't block recording start.
+  // Screen sources have bounds immediately; App sources need a Win32 lookup.
+  (async () => {
+    let bounds = selectedSource.bounds ?? null;
+    if (!bounds && String(selectedSource.id).startsWith('window:')) {
+      bounds = await window.flo.getWindowBounds(selectedSource.id);
+    }
+    if (bounds) await window.flo.showDesktopOverlay(bounds);
+  })().catch(() => {});
 });
 
 btnPause.addEventListener('click', () => {
@@ -245,6 +296,8 @@ btnStop.addEventListener('click', async () => {
   recording = false;
   paused    = false;
   window.flo.offDesktopClick();
+  window.flo.offDesktopClickElement();
+  await window.flo.hideDesktopOverlay();
   await window.flo.stopDesktopHook();
   updateButtons();
   if (steps.length > 0) showSaveModal();
@@ -255,34 +308,40 @@ btnStop.addEventListener('click', async () => {
 async function handleDesktopClick(data) {
   if (!recording || paused || !selectedSource) return;
 
-  // For monitor sources, only register clicks within that display's screen region
+  // For monitor sources, only register clicks within that display's screen region.
+  // selectedSource.bounds is in logical (CSS) pixels; uiohook sends physical pixels.
+  // Multiply by devicePixelRatio to convert logical → physical for the comparison.
   if (selectedSource.bounds) {
-    const b = selectedSource.bounds;
-    if (data.x < b.x || data.x > b.x + b.width ||
-        data.y < b.y || data.y > b.y + b.height) {
+    const dpr = window.devicePixelRatio || 1;
+    const b   = selectedSource.bounds;
+    if (data.x < b.x * dpr || data.x > (b.x + b.width)  * dpr ||
+        data.y < b.y * dpr || data.y > (b.y + b.height) * dpr) {
       return;
     }
   }
 
-  const action    = data.button === 2 ? 'Right-click' : 'Click';
-  const appName   = selectedSource ? selectedSource.name : '';
-  const clickText = appName ? `${action} in ${appName}.` : `${action}.`;
+  const action = data.button === 2 ? 'Right-click' : 'Click';
+  let clickText;
+  if (currentSourceType === 'screen') {
+    // Display name ("Display 2") is useless — UIA will fill in the real context
+    clickText = `${action}.`;
+  } else {
+    // Window titles are often "file - project - App Name"; take the last segment
+    const rawName = selectedSource ? selectedSource.name : '';
+    const appName = rawName ? rawName.split(' - ').pop().trim() : '';
+    clickText = appName ? `${action} in ${appName}.` : `${action}.`;
+  }
   const stepId    = `d-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-  // Wait for the target app to respond to the click before screenshotting
-  await new Promise(r => setTimeout(r, 900));
-
-  if (!recording) return; // stopped while waiting
-
+  // Immediate screenshot
   let screenshotDataUrl = null;
   try {
     screenshotDataUrl = await window.flo.captureDesktopSource(selectedSource.id);
   } catch {}
 
-  const subAction = { stepId, text: clickText, screenshotDataUrl };
+  const subAction = { stepId, text: clickText, screenshotDataUrl, _clickX: data.x, _clickY: data.y, _button: data.button };
   const now       = Date.now();
   const lastGroup = steps[steps.length - 1] || null;
-  // Use source ID as the "page" identifier — switching windows breaks the group
   const meta      = { pageUrl: selectedSource.id };
 
   if (window.stepGroups.shouldMergeWithGroup(lastGroup, meta, now)) {
@@ -292,7 +351,17 @@ async function handleDesktopClick(data) {
     steps.push({ subActions: [subAction], pageUrl: selectedSource.id, lastActionAt: now });
   }
 
-  // Update the preview image to show the app's current state
+  // If UIA result arrived before this step was added, apply it now
+  const elemKey = `${data.x},${data.y}`;
+  const pendingEl = pendingElements.get(elemKey);
+  if (pendingEl) {
+    pendingElements.delete(elemKey);
+    const desc = describeElement(pendingEl.name, pendingEl.type);
+    if (desc) {
+      subAction.text = `${action} ${desc}.`;
+    }
+  }
+
   if (screenshotDataUrl) {
     previewImg.src = screenshotDataUrl;
     previewImg.removeAttribute('hidden');
@@ -300,6 +369,55 @@ async function handleDesktopClick(data) {
   }
 
   renderStepsList();
+
+  // Delayed re-capture — picks up any UI that changed after the click settled
+  setTimeout(async () => {
+    if (!recording) return;
+    let delayed = null;
+    try { delayed = await window.flo.captureDesktopSource(selectedSource.id); } catch {}
+    if (!delayed) return;
+    subAction.screenshotDataUrl = delayed;
+    previewImg.src = delayed;
+    previewImg.removeAttribute('hidden');
+    previewPlaceholder.setAttribute('hidden', '');
+    renderStepsList();
+  }, 900);
+}
+
+function describeElement(name, type) {
+  const typeLabels = {
+    Button: 'button', CheckBox: 'checkbox', ComboBox: 'dropdown',
+    Edit: 'text field', Hyperlink: 'link', ListItem: 'list item',
+    MenuItem: 'menu item', RadioButton: 'radio button', Tab: 'tab',
+    Text: 'text', ToolBar: 'toolbar', TreeItem: 'tree item'
+  };
+  const label = typeLabels[type] || (type && type !== '' ? type.toLowerCase() : '');
+  if (name && label) return `'${name}' ${label}`;
+  if (name)          return `'${name}'`;
+  if (label)         return `a ${label}`;
+  return '';
+}
+
+function handleDesktopClickElement(data) {
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const group = steps[i];
+    for (let j = group.subActions.length - 1; j >= 0; j--) {
+      const sub = group.subActions[j];
+      if (sub._clickX === data.x && sub._clickY === data.y) {
+        const desc = describeElement(data.name, data.type);
+        if (desc) {
+          const action = sub._button === 2 ? 'Right-click' : 'Click';
+          sub.text = `${action} ${desc}.`;
+          renderStepsList();
+        }
+        return;
+      }
+    }
+  }
+  // Step not yet in array (screenshot capture still in flight) — stash for handleDesktopClick
+  const key = `${data.x},${data.y}`;
+  pendingElements.set(key, data);
+  setTimeout(() => pendingElements.delete(key), 5000);
 }
 
 // ── Save modal ─────────────────────────────────────────────────────────────────
@@ -350,6 +468,8 @@ btnSaveDiscard.addEventListener('click', async () => {
   recording = false;
   paused    = false;
   window.flo.offDesktopClick();
+  window.flo.offDesktopClickElement();
+  await window.flo.hideDesktopOverlay();
   await window.flo.stopDesktopHook();
 
   // Reset preview and return to source picker
@@ -374,13 +494,15 @@ window.addEventListener('beforeunload', (e) => {
 
 // Set correct active pill and heading text based on the mode param
 (function initMode() {
-  const activeMode = currentSourceType === 'screen' ? 'monitor' : 'desktop';
+  const activeMode = currentSourceType === 'screen' ? 'screen' : 'apps';
   modeSwitcher.querySelectorAll('.mode-switcher-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.mode === activeMode);
   });
 
   toolbarSourceName.textContent   = '';
-  sourcePickerHeading.textContent = currentSourceType === 'screen' ? 'Monitors' : 'Application Windows';
+  sourcePickerHeading.textContent = currentSourceType === 'screen'
+    ? 'Available Screens'
+    : 'Available Apps';
 })();
 
 loadSources();

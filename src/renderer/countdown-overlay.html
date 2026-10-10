@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100vw; height: 100vh;
+  background: rgba(123, 106, 175, 0.92);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+#num {
+  font-size: 140px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  font-family: Georgia, 'Times New Roman', serif;
+  animation: pop 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes pop {
+  from { transform: scale(1.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+p {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: system-ui, sans-serif;
+}
+</style>
+</head>
+<body>
+<div id="num">3</div>
+<p>Recording starts in…</p>
+<script>
+const el = document.getElementById('num');
+let n = 2;
+const timer = setInterval(() => {
+  if (n < 1) { clearInterval(timer); return; }
+  el.textContent = String(n);
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = 'pop 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+  n--;
+}, 1000);
+</script>
+</body>
+</html>

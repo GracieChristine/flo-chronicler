@@ -1,6 +1,6 @@
 // Main process: window creation, IPC handlers, webview security enforcement.
 
-const { app, BrowserWindow, ipcMain, dialog, shell, webContents, net, session } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, webContents, net, session, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -54,7 +54,9 @@ function sanitizeFileName(name) {
 // ── Window creation ────────────────────────────────────────────────────────────
 
 function createWindow() {
-  const iconPath = path.join(__dirname, '..', 'assets', 'icon.png');
+  const iconIco = path.join(__dirname, '..', 'assets', 'icon.ico');
+  const iconPng = path.join(__dirname, '..', 'assets', 'icon.png');
+  const iconPath = fs.existsSync(iconIco) ? iconIco : iconPng;
   const win = new BrowserWindow({
     width: 1280,
     height: 860,
@@ -71,6 +73,15 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  // Close border overlay when the main window is closed so the process exits cleanly
+  win.on('closed', () => {
+    if (overlayWin && !overlayWin.isDestroyed()) {
+      try { overlayWin.close(); } catch {}
+      overlayWin = null;
+    }
+    stopUiaProcess();
+  });
 
   // Open DevTools automatically in dev mode so console errors are immediately visible.
   if (!app.isPackaged) {
@@ -328,43 +339,38 @@ ipcMain.handle('desktop:getSources', async (_event, sourceType = 'window') => {
       const primaryDisplay = screen.getPrimaryDisplay();
       const allDisplays   = screen.getAllDisplays();
 
-      // Virtual desktop bounding box — spans ALL monitors
-      const minX = Math.min(...allDisplays.map(d => d.bounds.x));
-      const minY = Math.min(...allDisplays.map(d => d.bounds.y));
-      const maxX = Math.max(...allDisplays.map(d => d.bounds.x + d.bounds.width));
-      const maxY = Math.max(...allDisplays.map(d => d.bounds.y + d.bounds.height));
-      const vw   = maxX - minX;
-      const vh   = maxY - minY;
-
-      // Re-fetch at full virtual desktop size so we can crop per-display
-      const fullSources = await desktopCapturer.getSources({
+      const rawSources = await desktopCapturer.getSources({
         types: ['screen'],
-        thumbnailSize: { width: vw, height: vh }
+        thumbnailSize: { width: 4096, height: 4096 }
       });
-      const virtualSrc = fullSources[0];
-      if (!virtualSrc) return [];
+      if (!rawSources || rawSources.length === 0) return [];
 
-      const fullImg  = virtualSrc.thumbnail;
-      const imgSize  = fullImg.getSize();
-      const scaleX   = imgSize.width  / vw;
-      const scaleY   = imgSize.height / vh;
+      floDisplaySourceCache.clear();
+      const usedSourceIds = new Set();
 
-      // Produce one card per physical display, each cropped to its own region
       return allDisplays.map((d, idx) => {
+        const physW = Math.round(d.bounds.width  * d.scaleFactor);
+        const physH = Math.round(d.bounds.height * d.scaleFactor);
+
+        let bestSrc = null;
+        let bestScore = Infinity;
+        for (const src of rawSources) {
+          if (usedSourceIds.has(src.id)) continue;
+          const sz = src.thumbnail.getSize();
+          const score = Math.abs(sz.width - physW) + Math.abs(sz.height - physH);
+          if (score < bestScore) { bestScore = score; bestSrc = src; }
+        }
+        if (!bestSrc) bestSrc = rawSources[Math.min(idx, rawSources.length - 1)];
+        usedSourceIds.add(bestSrc.id);
+        floDisplaySourceCache.set(`flo-display-${idx}`, bestSrc.id);
+
         const primary = d.id === primaryDisplay.id;
-        const cropX = Math.max(0, Math.round((d.bounds.x - minX) * scaleX));
-        const cropY = Math.max(0, Math.round((d.bounds.y - minY) * scaleY));
-        const cropW = Math.min(imgSize.width  - cropX, Math.round(d.bounds.width  * scaleX));
-        const cropH = Math.min(imgSize.height - cropY, Math.round(d.bounds.height * scaleY));
-        const thumb  = fullImg.crop({ x: cropX, y: cropY, width: cropW, height: cropH })
-                              .resize({ width: 320 });
+        const thumb   = bestSrc.thumbnail.resize({ width: 320 });
         return {
           id:               `flo-display-${idx}`,
-          name:             primary
-                              ? `Primary (${d.bounds.width}×${d.bounds.height})`
-                              : `Display ${idx + 1} (${d.bounds.width}×${d.bounds.height})`,
+          name:             primary ? 'Primary Screen' : `Display Screen ${idx + 1}`,
           thumbnailDataUrl: thumb.toDataURL(),
-          bounds:           d.bounds   // passed to renderer so click filtering works
+          bounds:           d.bounds
         };
       });
     }
@@ -372,7 +378,7 @@ ipcMain.handle('desktop:getSources', async (_event, sourceType = 'window') => {
     const BROWSER_KEYWORDS = ['Chrome', 'Firefox', 'Edge', 'Brave', 'Opera', 'Vivaldi', 'Arc', 'Safari'];
     return sources
       .filter(s => {
-        if (!s.name || s.name === 'Flo, the Chronicler') return false;
+        if (!s.name || s.name === 'Flo, the Chronicler' || s.name === 'FloOverlay') return false;
         return !BROWSER_KEYWORDS.some(kw => s.name.includes(kw));
       })
       .map(s => ({ id: s.id, name: s.name, thumbnailDataUrl: s.thumbnail.toDataURL() }));
@@ -383,42 +389,43 @@ ipcMain.handle('desktop:getSources', async (_event, sourceType = 'window') => {
 });
 
 ipcMain.handle('desktop:captureSource', async (_event, sourceId) => {
+  const overlayVisible = overlayWin && !overlayWin.isDestroyed() && overlayWin.isVisible();
+  if (overlayVisible) {
+    overlayWin.hide();
+    await new Promise(r => setTimeout(r, 80));
+  }
   try {
     const { desktopCapturer, screen } = require('electron');
     if (!desktopCapturer) return null;
 
-    // Synthetic per-display ID (flo-display-N) → crop from virtual desktop
+    // Synthetic per-display ID (flo-display-N) — use the source ID cached during
+    // getSources so capture always matches what was shown in the picker.
     if (String(sourceId).startsWith('flo-display-')) {
       const idx         = parseInt(sourceId.replace('flo-display-', ''), 10);
       const allDisplays = screen.getAllDisplays();
       const display     = allDisplays[idx];
       if (!display) return null;
 
-      const minX = Math.min(...allDisplays.map(d => d.bounds.x));
-      const minY = Math.min(...allDisplays.map(d => d.bounds.y));
-      const maxX = Math.max(...allDisplays.map(d => d.bounds.x + d.bounds.width));
-      const maxY = Math.max(...allDisplays.map(d => d.bounds.y + d.bounds.height));
-      const vw   = maxX - minX;
-      const vh   = maxY - minY;
+      const physW = Math.round(display.bounds.width  * display.scaleFactor);
+      const physH = Math.round(display.bounds.height * display.scaleFactor);
 
-      const fullSources = await desktopCapturer.getSources({
+      const screenSources = await desktopCapturer.getSources({
         types: ['screen'],
-        thumbnailSize: { width: vw, height: vh }
+        thumbnailSize: { width: physW, height: physH }
       });
-      const virtualSrc = fullSources[0];
-      if (!virtualSrc) return null;
 
-      const fullImg = virtualSrc.thumbnail;
-      const imgSize = fullImg.getSize();
-      const scaleX  = imgSize.width  / vw;
-      const scaleY  = imgSize.height / vh;
-
-      const cropX = Math.max(0, Math.round((display.bounds.x - minX) * scaleX));
-      const cropY = Math.max(0, Math.round((display.bounds.y - minY) * scaleY));
-      const cropW = Math.min(imgSize.width  - cropX, Math.round(display.bounds.width  * scaleX));
-      const cropH = Math.min(imgSize.height - cropY, Math.round(display.bounds.height * scaleY));
-
-      return fullImg.crop({ x: cropX, y: cropY, width: cropW, height: cropH }).toDataURL();
+      // Prefer the cached match from getSources; fall back to size-based matching
+      const cachedId = floDisplaySourceCache.get(sourceId);
+      let src = cachedId ? screenSources.find(s => s.id === cachedId) : null;
+      if (!src) {
+        let bestScore = Infinity;
+        for (const s of screenSources) {
+          const sz    = s.thumbnail.getSize();
+          const score = Math.abs(sz.width - physW) + Math.abs(sz.height - physH);
+          if (score < bestScore) { bestScore = score; src = s; }
+        }
+      }
+      return src ? src.thumbnail.toDataURL() : null;
     }
 
     // Native window source ID (window:HWND:0)
@@ -431,18 +438,109 @@ ipcMain.handle('desktop:captureSource', async (_event, sourceId) => {
   } catch (err) {
     console.error('[flo] desktop:captureSource error:', err.message);
     return null;
+  } finally {
+    if (overlayVisible && overlayWin && !overlayWin.isDestroyed()) {
+      overlayWin.showInactive();
+    }
   }
 });
+
+// Maps flo-display-N → desktopCapturer source ID, populated during getSources
+// so captureSource uses the same display that was shown in the picker.
+const floDisplaySourceCache = new Map();
 
 // Global mouse hook state
 let hookActive = false;
 let hookTargetWcId = null;
 let uiohook = null;
+let overlayWin = null;
+
+// ── UIAutomation element lookup (persistent PowerShell process) ────────────────
+let uiaProcess    = null;
+let uiaPending    = [];   // array of resolver fns waiting for next stdout line
+let uiaOutputBuf  = '';
+
+function startUiaProcess() {
+  const scriptPath = path.join(os.tmpdir(), 'flo-uia.ps1');
+  const script = `
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+while ($true) {
+  $line = [Console]::ReadLine()
+  if (-not $line -or $line -eq 'exit') { break }
+  try {
+    $parts = $line.Trim().Split(' ')
+    $x = [double]$parts[0]; $y = [double]$parts[1]
+    $pt = New-Object System.Windows.Point($x, $y)
+    $el = [System.Windows.Automation.AutomationElement]::FromPoint($pt)
+    if (-not $el) { [Console]::WriteLine('|'); continue }
+    $n  = $el.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::NameProperty)
+    $ct = $el.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::ControlTypeProperty)
+    $t  = if ($ct) { $ct.ProgrammaticName.Replace('ControlType.','') } else { '' }
+    [Console]::WriteLine("$n|$t")
+  } catch { [Console]::WriteLine('|') }
+}
+`.trim();
+  try {
+    fs.writeFileSync(scriptPath, script, 'utf8');
+    const { spawn } = require('child_process');
+    uiaProcess = spawn('powershell', ['-NoProfile', '-NonInteractive', '-File', scriptPath], {
+      stdio: ['pipe', 'pipe', 'ignore']
+    });
+    uiaProcess.stdout.on('data', (chunk) => {
+      uiaOutputBuf += chunk.toString();
+      const lines = uiaOutputBuf.split('\n');
+      uiaOutputBuf = lines.pop();
+      for (const line of lines) {
+        const resolver = uiaPending.shift();
+        if (resolver) resolver(line.trim());
+      }
+    });
+    uiaProcess.on('exit', () => {
+      uiaProcess = null;
+      for (const r of uiaPending) r('');
+      uiaPending = []; uiaOutputBuf = '';
+    });
+  } catch (err) {
+    console.warn('[flo] UIA process failed to start:', err.message);
+  }
+}
+
+function stopUiaProcess() {
+  if (uiaProcess) {
+    try { uiaProcess.stdin.write('exit\n'); } catch {}
+    try { uiaProcess.kill(); } catch {}
+    uiaProcess = null;
+  }
+  for (const r of uiaPending) r('');
+  uiaPending = []; uiaOutputBuf = '';
+}
+
+function queryElementAtPoint(x, y) {
+  if (!uiaProcess) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      const idx = uiaPending.indexOf(innerResolve);
+      if (idx !== -1) uiaPending.splice(idx, 1);
+      resolve(null);
+    }, 3000);
+    function innerResolve(result) {
+      clearTimeout(timeout);
+      resolve(result || null);
+    }
+    uiaPending.push(innerResolve);
+    try { uiaProcess.stdin.write(`${x} ${y}\n`); }
+    catch { uiaPending.pop(); clearTimeout(timeout); resolve(null); }
+  });
+}
 
 ipcMain.handle('desktop:startHook', async (event) => {
   if (hookActive) return { ok: true };
   hookTargetWcId = event.sender.id;
   hookActive = true;
+
+  // Start UIA element-lookup process in background (takes ~2s to initialise)
+  startUiaProcess();
 
   try {
     const { uIOhook } = require('uiohook-napi');
@@ -451,8 +549,9 @@ ipcMain.handle('desktop:startHook', async (event) => {
     uiohook.on('mousedown', (e) => {
       if (!hookActive) return;
 
-      // Ignore clicks on any Flo window
+      // Ignore clicks on any Flo window (but not the transparent overlay — it passes clicks through)
       for (const win of BrowserWindow.getAllWindows()) {
+        if (win === overlayWin) continue;
         const b = win.getBounds();
         if (e.x >= b.x - 10 && e.x <= b.x + b.width + 10 &&
             e.y >= b.y - 10 && e.y <= b.y + b.height + 10) {
@@ -461,9 +560,26 @@ ipcMain.handle('desktop:startHook', async (event) => {
       }
 
       const wc = webContents.fromId(hookTargetWcId);
-      if (wc && !wc.isDestroyed()) {
-        wc.send('desktop:click', { x: e.x, y: e.y, button: e.button });
-      }
+      if (!wc || wc.isDestroyed()) return;
+
+      wc.send('desktop:click', { x: e.x, y: e.y, button: e.button });
+
+      // Convert physical pixel coords (uiohook) → logical coords for UIAutomation.
+      // PowerShell is System-DPI-Aware, so FromPoint expects logical coordinates.
+      const sf = screen.getPrimaryDisplay().scaleFactor || 1;
+      const logX = Math.round(e.x / sf);
+      const logY = Math.round(e.y / sf);
+      queryElementAtPoint(logX, logY).then((result) => {
+        if (!hookActive) return;
+        console.log(`[UIA] phys(${e.x},${e.y}) log(${logX},${logY}) sf=${sf} => ${JSON.stringify(result)}`);
+        if (!result) return;
+        const [name, type] = result.split('|');
+        if (!name && !type) return;
+        const wc2 = webContents.fromId(hookTargetWcId);
+        if (wc2 && !wc2.isDestroyed()) {
+          wc2.send('desktop:click-element', { x: e.x, y: e.y, name: name || '', type: type || '' });
+        }
+      }).catch(() => {});
     });
 
     uiohook.start();
@@ -471,6 +587,7 @@ ipcMain.handle('desktop:startHook', async (event) => {
   } catch (err) {
     hookActive = false;
     hookTargetWcId = null;
+    stopUiaProcess();
     console.error('[flo] desktop:startHook error:', err.message);
     return { ok: false, reason: err.message };
   }
@@ -479,6 +596,7 @@ ipcMain.handle('desktop:startHook', async (event) => {
 ipcMain.handle('desktop:stopHook', () => {
   hookActive = false;
   hookTargetWcId = null;
+  stopUiaProcess();
   if (uiohook) {
     try {
       uiohook.stop();
@@ -488,8 +606,153 @@ ipcMain.handle('desktop:stopHook', () => {
   }
 });
 
-// Stop the hook when the app quits
+// ── Border overlay ─────────────────────────────────────────────────────────────
+
+async function getWindowBoundsForSource(sourceId) {
+  const match = String(sourceId).match(/^window:(\d+)/);
+  if (!match) return null;
+  const hwnd = match[1]; // digits only — safe to interpolate
+
+  const tmpScript = path.join(os.tmpdir(), 'flo-wbounds.ps1');
+  // GetWindowRect returns physical pixels; GetDpiForMonitor lets us convert to logical
+  const script = `Add-Type -TypeDefinition @"
+using System;using System.Runtime.InteropServices;
+public class WA{
+  [DllImport("user32.dll")]public static extern bool GetWindowRect(IntPtr h,ref RECT r);
+  [DllImport("user32.dll")]public static extern IntPtr MonitorFromWindow(IntPtr h,uint f);
+  [DllImport("shcore.dll")]public static extern int GetDpiForMonitor(IntPtr m,int t,ref uint x,ref uint y);
+  [DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int n);
+  [DllImport("user32.dll")]public static extern bool IsIconic(IntPtr h);
+  [DllImport("dwmapi.dll")]public static extern int DwmGetWindowAttribute(IntPtr h,int a,ref RECT r,int s);
+  public struct RECT{public int L,T,R,B;}
+}
+"@
+$r=New-Object WA+RECT
+if([WA]::IsIconic([IntPtr]${hwnd})){[WA]::ShowWindow([IntPtr]${hwnd},9)|Out-Null}
+[WA]::SetForegroundWindow([IntPtr]${hwnd})|Out-Null
+[WA]::GetWindowRect([IntPtr]${hwnd},[ref]$r)|Out-Null
+# DWMWA_EXTENDED_FRAME_BOUNDS (9) gives the visual bounds without the invisible shadow extension
+$vr=New-Object WA+RECT
+if([WA]::DwmGetWindowAttribute([IntPtr]${hwnd},9,[ref]$vr,16) -eq 0){$r=$vr}
+$mon=[WA]::MonitorFromWindow([IntPtr]${hwnd},2)
+$dx=[uint32]0;$dy=[uint32]0
+[WA]::GetDpiForMonitor($mon,0,[ref]$dx,[ref]$dy)|Out-Null
+$sf=if($dx -gt 0){$dx/96.0}else{1.0}
+Write-Output "$([Math]::Round($r.L/$sf)) $([Math]::Round($r.T/$sf)) $([Math]::Round($r.R/$sf)) $([Math]::Round($r.B/$sf))"`;
+
+  try {
+    fs.writeFileSync(tmpScript, script, 'utf8');
+    return await new Promise((resolve) => {
+      const { execFile } = require('child_process');
+      execFile('powershell', ['-NoProfile', '-NonInteractive', '-File', tmpScript], { timeout: 5000 }, (err, stdout) => {
+        if (err) { resolve(null); return; }
+        const parts = stdout.trim().split(/\s+/).map(Number);
+        if (parts.length !== 4 || parts.some(isNaN)) { resolve(null); return; }
+        const [l, t, r, b] = parts;
+        resolve({ x: l, y: t, width: r - l, height: b - t });
+      });
+    });
+  } catch {
+    return null;
+  }
+}
+
+ipcMain.handle('desktop:getWindowBounds', (_event, sourceId) => {
+  return getWindowBoundsForSource(sourceId);
+});
+
+ipcMain.handle('desktop:showOverlay', async (_event, bounds) => {
+  if (overlayWin && !overlayWin.isDestroyed()) {
+    overlayWin.close();
+    overlayWin = null;
+  }
+  if (!bounds || !bounds.width || !bounds.height) return;
+
+  console.log('[overlay] requested:', JSON.stringify(bounds));
+
+  // Use a local ref — another rapid showOverlay call may close this window
+  // before loadFile resolves. Check isDestroyed() + identity before using it.
+  const win = new BrowserWindow({
+    x:               Math.round(bounds.x),
+    y:               Math.round(bounds.y),
+    width:           Math.round(bounds.width),
+    height:          Math.round(bounds.height),
+    transparent:     true,
+    backgroundColor: '#00000000',
+    frame:           false,
+    focusable:       false,
+    alwaysOnTop:     true,
+    skipTaskbar:     true,
+    hasShadow:       false,
+    roundedCorners:  false,
+    webPreferences:  { nodeIntegration: false, contextIsolation: true }
+  });
+  overlayWin = win;
+  // Electron caps new window size to the primary display's work area at creation time.
+  // setBounds() bypasses that cap so the overlay covers the correct display fully.
+  win.setBounds({ x: Math.round(bounds.x), y: Math.round(bounds.y), width: Math.round(bounds.width), height: Math.round(bounds.height) });
+
+  win.setTitle('FloOverlay');
+  win.setIgnoreMouseEvents(true, { forward: true });
+  win.on('closed', () => { if (overlayWin === win) overlayWin = null; });
+
+  await win.loadFile(path.join(__dirname, 'renderer', 'overlay.html'));
+
+  // Guard: a subsequent showOverlay call may have closed this window or replaced overlayWin
+  if (win.isDestroyed() || overlayWin !== win) return;
+
+  console.log('[overlay] actual getBounds():', JSON.stringify(win.getBounds()));
+  win.showInactive();
+  win.setAlwaysOnTop(true, 'screen-saver');
+  win.moveTop();
+});
+
+ipcMain.handle('desktop:hideOverlay', () => {
+  if (overlayWin && !overlayWin.isDestroyed()) {
+    overlayWin.close();
+    overlayWin = null;
+  }
+});
+
+ipcMain.handle('desktop:runCountdown', async (_event, bounds) => {
+  if (!bounds) { await new Promise(r => setTimeout(r, 3100)); return; }
+
+  const cwin = new BrowserWindow({
+    x:              Math.round(bounds.x),
+    y:              Math.round(bounds.y),
+    width:          Math.round(bounds.width),
+    height:         Math.round(bounds.height),
+    transparent:    true,
+    frame:          false,
+    focusable:      false,
+    alwaysOnTop:    true,
+    skipTaskbar:    true,
+    hasShadow:      false,
+    roundedCorners: false,
+    webPreferences: { nodeIntegration: false, contextIsolation: true }
+  });
+
+  cwin.setIgnoreMouseEvents(true, { forward: true });
+  cwin.setBounds({ x: Math.round(bounds.x), y: Math.round(bounds.y), width: Math.round(bounds.width), height: Math.round(bounds.height) });
+
+  try {
+    await cwin.loadFile(path.join(__dirname, 'renderer', 'countdown-overlay.html'));
+    cwin.showInactive();
+    cwin.setAlwaysOnTop(true, 'screen-saver');
+    cwin.moveTop();
+    await new Promise(r => setTimeout(r, 3100));
+  } finally {
+    if (!cwin.isDestroyed()) cwin.close();
+  }
+});
+
+// Stop the hook and close the overlay when the app quits
 app.on('before-quit', () => {
+  if (overlayWin && !overlayWin.isDestroyed()) {
+    try { overlayWin.close(); } catch {}
+    overlayWin = null;
+  }
   if (uiohook) {
     try { uiohook.stop(); } catch {}
     uiohook = null;

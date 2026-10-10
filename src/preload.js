@@ -80,5 +80,29 @@ contextBridge.exposeInMainWorld('flo', {
 
   offDesktopClick() {
     ipcRenderer.removeAllListeners('desktop:click');
+  },
+
+  showDesktopOverlay(bounds) {
+    return ipcRenderer.invoke('desktop:showOverlay', bounds);
+  },
+
+  hideDesktopOverlay() {
+    return ipcRenderer.invoke('desktop:hideOverlay');
+  },
+
+  getWindowBounds(sourceId) {
+    return ipcRenderer.invoke('desktop:getWindowBounds', sourceId);
+  },
+
+  runDesktopCountdown(bounds) {
+    return ipcRenderer.invoke('desktop:runCountdown', bounds);
+  },
+
+  onDesktopClickElement(cb) {
+    ipcRenderer.on('desktop:click-element', (_event, data) => cb(data));
+  },
+
+  offDesktopClickElement() {
+    ipcRenderer.removeAllListeners('desktop:click-element');
   }
 });

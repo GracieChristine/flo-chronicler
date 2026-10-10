@@ -232,6 +232,40 @@
     white-space: nowrap;
   }
   #btn-pause svg { flex-shrink: 0; }
+  /* ── 3-2-1 countdown overlay ─────────────────────────────────────────────── */
+  .countdown-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(123, 106, 175, 0.92);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    gap: 24px;
+  }
+  .countdown-overlay[hidden] { display: none; }
+  .countdown-number {
+    font-family: var(--font-display);
+    font-size: 140px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1;
+    animation: countPop 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes countPop {
+    from { transform: scale(1.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .countdown-label {
+    font-size: 15px;
+    color: rgba(255,255,255,0.72);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: var(--font-body);
+  }
+
   .modal-desc { color: var(--color-text-muted); font-size: 13px; margin: 0 0 12px; }
   .modal label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--color-text-muted); }
   .modal input[type="text"] { width: 100%; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; box-sizing: border-box; }
@@ -249,8 +283,8 @@
   </div>
   <div class="mode-switcher" id="mode-switcher">
     <button class="mode-switcher-btn" data-mode="webpage">Webpage</button>
-    <button class="mode-switcher-btn" data-mode="desktop">Desktop App</button>
-    <button class="mode-switcher-btn" data-mode="monitor">Full Monitor</button>
+    <button class="mode-switcher-btn" data-mode="apps">App</button>
+    <button class="mode-switcher-btn" data-mode="screen">Screen</button>
   </div>
   <span class="toolbar-source-name" id="toolbar-source-name"></span>
   <div class="toolbar-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -272,6 +306,12 @@
   </div>
 </div>
 
+<!-- ── 3-2-1 countdown overlay ────────────────────────────────────────────── -->
+<div class="countdown-overlay" id="countdown-overlay" hidden>
+  <div class="countdown-number" id="countdown-number">3</div>
+  <div class="countdown-label">Recording starts in…</div>
+</div>
+
 <!-- ── Source picker (shown before recording starts) ───────────────────────── -->
 <div class="source-picker" id="source-picker">
   <div class="source-picker-header">
@@ -283,7 +323,6 @@
   <div class="source-grid" id="source-grid">
     <p class="steps-empty">Loading…</p>
   </div>
-  <p class="source-picker-hint" id="source-picker-hint">Select one above, then click Start Recording. Minimized windows won't appear — restore them first.</p>
 </div>
 
 <!-- ── Recording body (hidden until recording starts) ─────────────────────── -->
