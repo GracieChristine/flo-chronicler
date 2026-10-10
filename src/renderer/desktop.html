@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flo, the Chronicler — Desktop Capture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+
+  /* ── Source picker ─────────────────────────────────────────────────────── */
+  .source-picker {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    background: var(--color-bg);
+    overflow-y: auto;
+    gap: 14px;
+  }
+  .source-picker[hidden] { display: none; }
+
+  .source-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 960px;
+  }
+  .source-picker-heading {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .btn-icon:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  .source-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .source-card {
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+  }
+  .source-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+  }
+  .source-card.selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+  .source-card.selected::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 6l3 3 4-5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .source-card-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: contain;
+    background: #1a1a1a;
+    border-radius: 4px;
+  }
+  .source-card-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .source-picker-hint {
+    font-size: 12px;
+    color: var(--color-text-faint);
+    margin: 0;
+  }
+
+  /* ── Recording body ────────────────────────────────────────────────────── */
+  .recorder-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  .recorder-body[hidden] { display: none; }
+
+  .desktop-preview {
+    flex: 1;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .desktop-preview-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .desktop-preview-img[hidden] { display: none; }
+  .desktop-preview-placeholder {
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    max-width: 320px;
+  }
+
+  /* ── Steps panel ───────────────────────────────────────────────────────── */
+  .steps-panel {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--color-bg);
+    border-left: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .steps-panel-header {
+    padding: 10px 14px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-faint);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+    background: var(--color-surface);
+  }
+  .steps-panel-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  /* ── Toolbar mode switcher ───────────────────────────────────────────────── */
+  .mode-switcher {
+    display: flex;
+    gap: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+  .mode-switcher[hidden] { display: none; }
+  .mode-switcher-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+    font-family: var(--font-body);
+    transition: background 0.15s, color 0.15s;
+  }
+  .mode-switcher-btn.active {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+  .mode-switcher-btn:hover:not(.active) {
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ── Toolbar elements specific to desktop page ─────────────────────────── */
+  #btn-start[hidden]          { display: none; }
+  .recording-controls         { display: flex; align-items: center; gap: 8px; }
+  .recording-controls[hidden] { display: none; }
+  .toolbar-source-name {
+    flex: 1;
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 8px;
+  }
+  .toolbar-step-count {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+  }
+  #btn-pause svg { flex-shrink: 0; }
+  .modal-desc { color: var(--color-text-muted); font-size: 13px; margin: 0 0 12px; }
+  .modal label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--color-text-muted); }
+  .modal input[type="text"] { width: 100%; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; box-sizing: border-box; }
+  .modal input[type="text"]:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+  .modal-error { color: var(--color-danger); font-size: 12px; margin: 6px 0 0; }
+  .modal-error[hidden] { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ── Toolbar ─────────────────────────────────────────────────────────────── -->
+<div class="toolbar">
+  <div class="toolbar-left" style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+    <a href="#" id="btn-logo" class="nav-link" style="font-size:13px;font-weight:500;white-space:nowrap">My Flows</a>
+  </div>
+  <div class="mode-switcher" id="mode-switcher">
+    <button class="mode-switcher-btn" data-mode="webpage">Webpage</button>
+    <button class="mode-switcher-btn" data-mode="desktop">Desktop App</button>
+    <button class="mode-switcher-btn" data-mode="monitor">Full Monitor</button>
+  </div>
+  <span class="toolbar-source-name" id="toolbar-source-name"></span>
+  <div class="toolbar-right" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <button id="btn-start" class="btn btn-danger" disabled>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="6"/></svg>
+      Start Recording
+    </button>
+    <div id="recording-controls" class="recording-controls" hidden>
+      <button id="btn-pause" class="btn btn-warning">
+        <svg width="11" height="13" viewBox="0 0 11 13" fill="currentColor" aria-hidden="true"><rect x="0" y="0" width="4" height="13" rx="1.5"/><rect x="7" y="0" width="4" height="13" rx="1.5"/></svg>
+        Pause
+      </button>
+      <button id="btn-stop" class="btn btn-stop">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="0" y="0" width="12" height="12" rx="1.5"/></svg>
+        Stop
+      </button>
+    </div>
+    <span class="toolbar-step-count" id="step-count"></span>
+  </div>
+</div>
+
+<!-- ── Source picker (shown before recording starts) ───────────────────────── -->
+<div class="source-picker" id="source-picker">
+  <div class="source-picker-header">
+    <span class="source-picker-heading" id="source-picker-heading">Application Windows</span>
+    <button class="btn-icon" id="btn-refresh-sources" title="Refresh">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
+  </div>
+  <div class="source-grid" id="source-grid">
+    <p class="steps-empty">Loading…</p>
+  </div>
+  <p class="source-picker-hint" id="source-picker-hint">Select one above, then click Start Recording. Minimized windows won't appear — restore them first.</p>
+</div>
+
+<!-- ── Recording body (hidden until recording starts) ─────────────────────── -->
+<div class="recorder-body" id="recorder-body" hidden>
+  <div class="desktop-preview" id="desktop-preview">
+    <img class="desktop-preview-img" id="preview-img" src="" alt="" hidden />
+    <p class="desktop-preview-placeholder" id="preview-placeholder">
+      Click anything in <strong id="preview-source-name" style="color:rgba(255,255,255,0.6)"></strong> to capture steps.<br/>
+      Each click is recorded automatically.
+    </p>
+  </div>
+  <div class="steps-panel">
+    <div class="steps-panel-header">Captured Steps</div>
+    <div class="steps-panel-list" id="steps-list"></div>
+  </div>
+</div>
+
+<!-- ── Save modal ──────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="save-modal-overlay" hidden>
+  <div class="modal" style="max-width:420px">
+    <h2>Save your recording</h2>
+    <p class="modal-desc">Give it a name — you can always edit the steps afterwards.</p>
+    <label for="save-title-input">Title</label>
+    <input type="text" id="save-title-input" placeholder="e.g. How to submit a support request" autocomplete="off" />
+    <p id="save-title-error" class="modal-error" hidden>Please enter a title before saving.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-save-discard">Discard</button>
+      <button class="btn btn-primary"   id="btn-save-confirm">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confirm dialog ─────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="confirm-modal-overlay" hidden>
+  <div class="modal" style="max-width:380px">
+    <h2 id="confirm-modal-title">Confirm</h2>
+    <p id="confirm-modal-message" style="color:var(--color-text-muted);font-size:13px;margin:0 0 4px;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-confirm-cancel">Cancel</button>
+      <button class="btn btn-danger"    id="btn-confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="stepGroups.js"></script>
+<script src="stepsPanel.js"></script>
+<script src="desktop.js"></script>
+</body>
+</html>

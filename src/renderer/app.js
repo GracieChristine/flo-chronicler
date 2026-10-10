@@ -62,6 +62,8 @@ function sendToWebviewPreload(channel, ...args) {
   );
 }
 
+const urlPlaceholder = document.getElementById('url-placeholder');
+
 // ── "My Flows" link → navigate to the flows list ───────────────────────────
 // Guards against discarding unsaved captured steps before leaving.
 
@@ -97,76 +99,70 @@ urlForm.addEventListener('submit', (e) => {
 });
 
 // ── Welcome screen → Recorder transition ──────────────────────────────────────
-// The app starts in welcome-mode (body class). Entering a URL switches to the
-// full recorder layout by removing that class. There is no way back to welcome
-// mid-session — the toolbar URL form handles all subsequent navigations.
 
-const welcomeInput = document.getElementById('welcome-url-input');
-const welcomeError = document.getElementById('welcome-error');
+const modeSwitcher = document.getElementById('mode-switcher');
 
-function showWelcomeError(msg) {
-  welcomeInput.classList.add('is-error');
-  welcomeError.textContent = msg;
-  welcomeError.removeAttribute('hidden');
-}
-
-function clearWelcomeError() {
-  welcomeInput.classList.remove('is-error');
-  welcomeError.setAttribute('hidden', '');
-}
-
-function validateAndNavigate(rawUrl) {
-  if (!rawUrl) {
-    showWelcomeError('Enter a URL to start recording.');
-    welcomeInput.focus();
-    return false;
-  }
-  let url = rawUrl;
-  if (!/^(https?|file):\/\//i.test(url)) url = 'https://' + url;
-  try {
-    const parsed = new URL(url);
-    if (!parsed.hostname) throw new Error('no hostname');
-  } catch {
-    showWelcomeError('That doesn\'t look like a valid URL — try something like example.com');
-    welcomeInput.focus();
-    return false;
-  }
-  clearWelcomeError();
-  enterRecorderMode(url);
-  return true;
-}
-
-let initialUrl = null;
-
-function enterRecorderMode(url) {
-  initialUrl = url;
+function enterRecorderMode() {
   document.body.classList.remove('welcome-mode');
-  if (webview) webview.src = url;
-  urlInput.value = url;
+  modeSwitcher.removeAttribute('hidden');
+  setTimeout(() => urlInput.focus(), 100);
 }
 
-// Clear error while typing
-welcomeInput.addEventListener('input', () => clearWelcomeError());
-
-// Enter key → validate and navigate
-document.getElementById('welcome-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  validateAndNavigate((welcomeInput.value || '').trim());
+// "Webpage" → enter recorder mode (URL entered via toolbar)
+document.getElementById('btn-record-webapp').addEventListener('click', () => {
+  enterRecorderMode();
 });
 
-// Tab / click-away → validate and navigate (unless focus moved to a link or button,
-// e.g. the "open your saved guides" link — in that case let their click win)
-welcomeInput.addEventListener('blur', (e) => {
-  const url = (welcomeInput.value || '').trim();
-  if (!url) { clearWelcomeError(); return; }
-  const rt = e.relatedTarget;
-  if (rt && (rt.tagName === 'A' || rt.tagName === 'BUTTON')) return;
-  validateAndNavigate(url);
+// "Desktop App" → navigate to desktop recorder in window mode
+document.getElementById('btn-record-desktop').addEventListener('click', () => {
+  window.location.href = 'desktop.html?mode=window';
 });
 
+// "Full Monitor" → navigate to desktop recorder in screen mode
+document.getElementById('btn-record-monitor').addEventListener('click', () => {
+  window.location.href = 'desktop.html?mode=screen';
+});
+
+// Mode switcher — switch between the 3 recording modes from within the recorder
+modeSwitcher.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.mode-switcher-btn');
+  if (!btn) return;
+  const newMode = btn.dataset.mode;
+  if (newMode === 'webpage') return; // already here
+
+  if (recording || paused || steps.length > 0) {
+    const ok = await showConfirm('Switching modes will discard any captured steps. Continue?', {
+      title: 'Switch mode?', okLabel: 'Switch', cancelLabel: 'Stay'
+    });
+    if (!ok) return;
+    if (recording || paused) {
+      recording = false;
+      paused    = false;
+      sendToWebviewPreload('flo:stop-recording');
+    }
+    steps = [];
+  }
+
+  window.location.href = newMode === 'desktop'
+    ? 'desktop.html?mode=window'
+    : 'desktop.html?mode=screen';
+});
+
+// If arriving via mode switcher from desktop recorder, skip welcome screen
+if (new URLSearchParams(window.location.search).get('recorder') === '1') {
+  enterRecorderMode();
+}
+
+// Hide URL placeholder when a real URL loads; show it when blank
 if (webview) {
   webview.addEventListener('did-navigate', (e) => {
-    urlInput.value = e.url === 'about:blank' ? '' : e.url;
+    const url = e.url || '';
+    urlInput.value = url === 'about:blank' ? '' : url;
+    if (url && url !== 'about:blank') {
+      urlPlaceholder.setAttribute('hidden', '');
+    } else {
+      urlPlaceholder.removeAttribute('hidden');
+    }
   });
 }
 
@@ -404,8 +400,7 @@ saveTitleInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); btnSaveConfirm.click(); }
 });
 
-// Discard: clear steps, revert to the initial URL, and stay on the recorder screen
-// ready to start again immediately.
+// Discard: clear steps and stay on the recorder screen, webview stays at current URL.
 btnSaveDiscard.addEventListener('click', () => {
   steps = [];
   renderStepsList();
@@ -413,10 +408,6 @@ btnSaveDiscard.addEventListener('click', () => {
   recording = false;
   paused    = false;
   sendToWebviewPreload('flo:stop-recording');
-  if (webview && initialUrl) {
-    webview.src = initialUrl;
-    urlInput.value = initialUrl;
-  }
   updateButtons();
 });
 

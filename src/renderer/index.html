@@ -33,7 +33,6 @@
     background: linear-gradient(148deg, var(--color-bg) 0%, var(--color-surface-alt) 100%);
     padding: 24px;
   }
-  /* Single card — matches REN REVIEWER structure */
   .welcome-card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -41,9 +40,8 @@
     box-shadow: 0 4px 24px rgba(58, 31, 74, 0.10), 0 1px 4px rgba(0,0,0,0.06);
     padding: 2.5rem;
     width: 100%;
-    max-width: 480px;
+    max-width: 740px;
   }
-  /* Logo + title inline — matches REN's h1 with inline img */
   .welcome-header {
     display: flex;
     align-items: center;
@@ -72,72 +70,120 @@
     margin: 0 0 1.5rem;
     line-height: 1.6;
   }
-  /* Form with gap between elements — matches REN's flex-column form */
-  .welcome-url-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    margin-bottom: 0;
+
+  /* ── Mode choice cards ───────────────────────────────────────────────────── */
+  .welcome-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 1.25rem;
   }
-  /* Label wrapping input — adds space above + label text like REN */
-  .welcome-label {
+
+  /* ── Toolbar mode switcher ───────────────────────────────────────────────── */
+  .mode-switcher {
     display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
-  }
-  .welcome-url-input {
-    padding: 0.6rem 0.75rem;
-    border: 1px solid var(--color-border);
+    gap: 2px;
+    background: rgba(255,255,255,0.08);
     border-radius: 6px;
-    font-family: var(--font-body);
-    font-size: 0.95rem;
-    color: var(--color-text);
-    background: var(--color-bg);
-    transition: border-color 0.15s, box-shadow 0.15s;
-    box-sizing: border-box;
-    width: 100%;
+    padding: 2px;
+    flex-shrink: 0;
   }
-  .welcome-url-input:focus {
-    outline: none;
+  .mode-switcher-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    white-space: nowrap;
+    font-family: var(--font-body);
+    transition: background 0.15s, color 0.15s;
+  }
+  .mode-switcher-btn.active {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+  .mode-switcher-btn:hover:not(.active) {
+    color: rgba(255,255,255,0.8);
+  }
+  .welcome-mode-btn {
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+    padding: 20px 16px;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .welcome-mode-btn:hover {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px var(--color-primary-light);
-  }
-  .welcome-url-input.is-error {
-    border-color: var(--color-danger);
-    box-shadow: 0 0 0 3px var(--color-danger-bg);
-  }
-  .welcome-input-hint {
-    font-size: 0.82rem;
-    color: var(--color-text-faint);
-    margin-top: 6px;
-  }
-  .welcome-input-hint kbd {
     background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    padding: 1px 5px;
-    font-size: 11px;
-    font-family: var(--font-body);
   }
-  .welcome-error {
-    font-size: 13px;
-    color: var(--color-danger);
-    margin: -0.75rem 0 0;
+  .welcome-mode-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--color-primary-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    flex-shrink: 0;
   }
-  .welcome-error[hidden] { display: none; }
-.welcome-guides-link {
+  .welcome-mode-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .welcome-mode-desc {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .welcome-guides-link {
     font-size: 0.82rem;
     color: var(--color-text-faint);
-    margin-top: 1.25rem;
+    margin: 0;
   }
-  .welcome-guides-link a {
-    color: var(--color-primary);
-    text-decoration: none;
-  }
+  .welcome-guides-link a { color: var(--color-primary); text-decoration: none; }
   .welcome-guides-link a:hover { text-decoration: underline; }
+
+  /* ── Webview placeholder — shown until a URL is entered ──────────────────── */
+  .webview-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  .url-placeholder {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: var(--color-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .url-placeholder[hidden] { display: none; }
+  .url-placeholder-icon { color: var(--color-border); }
+  .url-placeholder-text {
+    font-size: 13px;
+    color: var(--color-text-faint);
+    text-align: center;
+    max-width: 260px;
+    line-height: 1.6;
+  }
 
   /* ── Recorder toolbar ────────────────────────────────────────────────────── */
   .toolbar-url-form {
@@ -169,9 +215,11 @@
     position: relative; /* anchor for countdown overlay */
   }
   webview {
-    flex: 1;
+    width: 100%;
+    height: 100%;
     border: none;
     background: #fff;
+    display: block;
   }
   .steps-panel {
     width: 300px;
@@ -275,16 +323,29 @@
       <h1 class="welcome-app-name">Flo, the Chronicler</h1>
     </div>
     <p class="welcome-tagline">Capture any workflow, step by step.</p>
-    <form class="welcome-url-form" id="welcome-form">
-      <label class="welcome-label">
-        Website URL
-        <input type="text" class="welcome-url-input" id="welcome-url-input"
-               placeholder="https://your-app.com"
-               autocomplete="url" autofocus />
-        <span class="welcome-input-hint">Press <kbd>Enter</kbd> or tab away to navigate</span>
-        <p class="welcome-error" id="welcome-error" role="alert" hidden></p>
-      </label>
-    </form>
+    <div class="welcome-mode-grid">
+      <button class="welcome-mode-btn" id="btn-record-webapp">
+        <div class="welcome-mode-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <p class="welcome-mode-title">Webpage</p>
+        <p class="welcome-mode-desc">Capture steps in any website or web application</p>
+      </button>
+      <button class="welcome-mode-btn" id="btn-record-desktop">
+        <div class="welcome-mode-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <p class="welcome-mode-title">Desktop App</p>
+        <p class="welcome-mode-desc">Capture clicks in a specific desktop application window</p>
+      </button>
+      <button class="welcome-mode-btn" id="btn-record-monitor">
+        <div class="welcome-mode-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </div>
+        <p class="welcome-mode-title">Full Monitor</p>
+        <p class="welcome-mode-desc">Record an entire display — useful across multiple apps or a second screen</p>
+      </button>
+    </div>
     <p class="welcome-guides-link">Or <a href="guides.html">open My Flows</a>.</p>
   </div>
 </div>
@@ -292,15 +353,16 @@
 <!-- ── Recorder toolbar (shown after URL entry) ───────────────────────────── -->
 <div class="toolbar">
 
-  <!-- Brand — persistent across all views -->
-  <div class="toolbar-brand">
-    <img src="../../assets/logo.svg" class="toolbar-brand-logo" alt="" />
-  </div>
-  <span class="toolbar-brand-sep">·</span>
-
   <!-- Left: My Flows link (navigates to list, with unsaved-steps confirm) -->
   <div class="toolbar-left">
     <a href="#" id="btn-logo" class="nav-link toolbar-back-link">My Flows</a>
+  </div>
+
+  <!-- Mode switcher — hidden until recorder mode is entered -->
+  <div class="mode-switcher" id="mode-switcher" hidden>
+    <button class="mode-switcher-btn active" data-mode="webpage">Webpage</button>
+    <button class="mode-switcher-btn" data-mode="desktop">Desktop App</button>
+    <button class="mode-switcher-btn" data-mode="monitor">Full Monitor</button>
   </div>
 
   <!-- Centre: URL bar (stretches) -->
@@ -339,7 +401,13 @@
     <div class="countdown-label">Recording starts in…</div>
   </div>
 
-  <webview id="target-view" src="about:blank"></webview>
+  <div class="webview-wrap">
+    <webview id="target-view" src="about:blank"></webview>
+    <div class="url-placeholder" id="url-placeholder">
+      <svg class="url-placeholder-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <p class="url-placeholder-text">Enter a URL in the address bar above to start browsing.</p>
+    </div>
+  </div>
   <div class="steps-panel">
     <div class="steps-panel-header">Captured Steps</div>
     <div class="steps-panel-list" id="steps-list"></div>

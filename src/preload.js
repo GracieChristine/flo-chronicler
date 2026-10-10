@@ -54,5 +54,31 @@ contextBridge.exposeInMainWorld('flo', {
   // More reliable than webview.send() which is async in Electron 28+ and can reject silently.
   sendToWebview(wcId, channel, ...args) {
     return ipcRenderer.invoke('webview:relay', { wcId, channel, args });
+  },
+
+  // ── Desktop capture APIs ───────────────────────────────────────────────────
+
+  getDesktopSources(sourceType) {
+    return ipcRenderer.invoke('desktop:getSources', sourceType || 'window');
+  },
+
+  captureDesktopSource(sourceId) {
+    return ipcRenderer.invoke('desktop:captureSource', sourceId);
+  },
+
+  startDesktopHook() {
+    return ipcRenderer.invoke('desktop:startHook');
+  },
+
+  stopDesktopHook() {
+    return ipcRenderer.invoke('desktop:stopHook');
+  },
+
+  onDesktopClick(cb) {
+    ipcRenderer.on('desktop:click', (_event, data) => cb(data));
+  },
+
+  offDesktopClick() {
+    ipcRenderer.removeAllListeners('desktop:click');
   }
 });
