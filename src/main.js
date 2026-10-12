@@ -375,13 +375,23 @@ ipcMain.handle('desktop:getSources', async (_event, sourceType = 'window') => {
       });
     }
 
-    const BROWSER_KEYWORDS = ['Chrome', 'Firefox', 'Edge', 'Brave', 'Opera', 'Vivaldi', 'Arc', 'Safari'];
+    const KNOWN_APP_NAMES = [
+      [/\bGoogle Chrome\b/i, 'Google Chrome'],
+      [/\bMicrosoft Edge\b/i, 'Microsoft Edge'],
+      [/\bMozilla Firefox\b/i, 'Mozilla Firefox'],
+      [/\bFirefox\b/i, 'Firefox'],
+      [/\bBrave\b/i, 'Brave'],
+      [/\bOpera\b/i, 'Opera'],
+      [/\bVivaldi\b/i, 'Vivaldi'],
+      [/\bArc\b/i, 'Arc'],
+    ];
     return sources
-      .filter(s => {
-        if (!s.name || s.name === 'Flo, the Chronicler' || s.name === 'FloOverlay') return false;
-        return !BROWSER_KEYWORDS.some(kw => s.name.includes(kw));
-      })
-      .map(s => ({ id: s.id, name: s.name, thumbnailDataUrl: s.thumbnail.toDataURL() }));
+      .filter(s => s.name && s.name !== 'Flo, the Chronicler' && s.name !== 'FloOverlay')
+      .map(s => {
+        const known = KNOWN_APP_NAMES.find(([pat]) => pat.test(s.name));
+        const appName = known ? known[1] : (s.name.split(/\s+[-–|]\s+/).pop().trim() || s.name);
+        return { id: s.id, name: appName, thumbnailDataUrl: s.thumbnail.toDataURL() };
+      });
   } catch (err) {
     console.error('[flo] desktop:getSources error:', err.message);
     return [];
@@ -389,11 +399,6 @@ ipcMain.handle('desktop:getSources', async (_event, sourceType = 'window') => {
 });
 
 ipcMain.handle('desktop:captureSource', async (_event, sourceId) => {
-  const overlayVisible = overlayWin && !overlayWin.isDestroyed() && overlayWin.isVisible();
-  if (overlayVisible) {
-    overlayWin.hide();
-    await new Promise(r => setTimeout(r, 80));
-  }
   try {
     const { desktopCapturer, screen } = require('electron');
     if (!desktopCapturer) return null;
@@ -438,10 +443,6 @@ ipcMain.handle('desktop:captureSource', async (_event, sourceId) => {
   } catch (err) {
     console.error('[flo] desktop:captureSource error:', err.message);
     return null;
-  } finally {
-    if (overlayVisible && overlayWin && !overlayWin.isDestroyed()) {
-      overlayWin.showInactive();
-    }
   }
 });
 
@@ -463,30 +464,107 @@ let uiaOutputBuf  = '';
 function startUiaProcess() {
   const scriptPath = path.join(os.tmpdir(), 'flo-uia.ps1');
   const script = `
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class FloWin {
+  [DllImport("user32.dll")] public static extern IntPtr WindowFromPoint(int x, int y);
+  [DllImport("user32.dll")] public static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
+  [DllImport("user32.dll")] public static extern int GetWindowText(IntPtr hWnd, StringBuilder s, int n);
+}
+'@
+$floAccOk = $false
+try {
+  Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Reflection;
+public class FloAcc {
+  [StructLayout(LayoutKind.Sequential)]
+  public struct PT { public int x, y; }
+  [DllImport("oleacc.dll")]
+  public static extern int AccessibleObjectFromPoint(
+    PT pt,
+    [MarshalAs(UnmanagedType.IUnknown)] out object ppAcc,
+    out object pvarChild);
+  public static string GetAccName(object acc, object varChild) {
+    if (acc == null) return null;
+    try {
+      return (string)acc.GetType().InvokeMember(
+        "accName",
+        BindingFlags.GetProperty | BindingFlags.InvokeMethod | BindingFlags.IgnoreCase,
+        null, acc, new object[] { varChild });
+    } catch { return null; }
+  }
+  public static int GetAccRole(object acc, object varChild) {
+    try {
+      return Convert.ToInt32(acc.GetType().InvokeMember(
+        "accRole",
+        BindingFlags.GetProperty | BindingFlags.InvokeMethod | BindingFlags.IgnoreCase,
+        null, acc, new object[] { varChild }));
+    } catch { return 0; }
+  }
+}
+'@
+  $floAccOk = $true
+} catch { [Console]::Error.WriteLine("MSAA compile failed: $_") }
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
+$skip = @('Window','Pane','Document','ScrollBar','Thumb','Group')
+$roleMap = @{43='Button';12='MenuItem';11='MenuItem';30='Link';42='Edit';44='CheckBox';45='RadioButton';46='ComboBox'}
+$cw   = [System.Windows.Automation.TreeWalker]::ControlViewWalker
+[Console]::Error.WriteLine("UIA ready floAccOk=$floAccOk")
 while ($true) {
   $line = [Console]::ReadLine()
   if (-not $line -or $line -eq 'exit') { break }
+  $winTitle = ''
   try {
     $parts = $line.Trim().Split(' ')
-    $x = [double]$parts[0]; $y = [double]$parts[1]
+    $x = [int]$parts[0]; $y = [int]$parts[1]
+    $hw = [FloWin]::WindowFromPoint($x, $y)
+    $rw = [FloWin]::GetAncestor($hw, 3)
+    $sb = New-Object System.Text.StringBuilder(512)
+    [FloWin]::GetWindowText($rw, $sb, 512) | Out-Null
+    $winTitle = $sb.ToString()
     $pt = New-Object System.Windows.Point($x, $y)
     $el = [System.Windows.Automation.AutomationElement]::FromPoint($pt)
-    if (-not $el) { [Console]::WriteLine('|'); continue }
-    $n  = $el.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::NameProperty)
-    $ct = $el.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::ControlTypeProperty)
-    $t  = if ($ct) { $ct.ProgrammaticName.Replace('ControlType.','') } else { '' }
-    [Console]::WriteLine("$n|$t")
-  } catch { [Console]::WriteLine('|') }
+    $name = ''; $type = ''
+    if ($el) {
+      $curr = $el
+      for ($i = 0; $i -lt 6; $i++) {
+        $n  = $curr.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::NameProperty)
+        $ct = $curr.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::ControlTypeProperty)
+        $t  = if ($ct) { $ct.ProgrammaticName.Replace('ControlType.','') } else { '' }
+        if ($n -and $n.Trim() -ne '' -and (-not ($skip -contains $t))) { $name = $n.Trim(); $type = $t; break }
+        $p  = $cw.GetParent($curr)
+        if ($null -eq $p) { break }
+        $curr = $p
+      }
+    }
+    if (-not $name -and $floAccOk) {
+      $apt = New-Object FloAcc+PT; $apt.x = $x; $apt.y = $y
+      $acc = $null; $child = $null
+      if ([FloAcc]::AccessibleObjectFromPoint($apt, [ref]$acc, [ref]$child) -eq 0 -and $acc) {
+        $n = [FloAcc]::GetAccName($acc, $child)
+        if ($n -and $n.Trim() -ne '' -and $n -ne $winTitle) {
+          $name = $n.Trim()
+          $r    = [FloAcc]::GetAccRole($acc, $child)
+          $type = if ($roleMap.ContainsKey($r)) { $roleMap[$r] } else { '' }
+        }
+      }
+    }
+    [Console]::WriteLine("$name|$type|$winTitle")
+  } catch { [Console]::WriteLine("||$winTitle") }
 }
 `.trim();
   try {
     fs.writeFileSync(scriptPath, script, 'utf8');
     const { spawn } = require('child_process');
     uiaProcess = spawn('powershell', ['-NoProfile', '-NonInteractive', '-File', scriptPath], {
-      stdio: ['pipe', 'pipe', 'ignore']
+      stdio: ['pipe', 'pipe', 'pipe']
     });
+    uiaProcess.stderr.on('data', (d) => console.error('[UIA stderr]', d.toString().trim()));
     uiaProcess.stdout.on('data', (chunk) => {
       uiaOutputBuf += chunk.toString();
       const lines = uiaOutputBuf.split('\n');
@@ -549,12 +627,18 @@ ipcMain.handle('desktop:startHook', async (event) => {
     uiohook.on('mousedown', (e) => {
       if (!hookActive) return;
 
+      // Capture coords immediately — uiohook reuses the event object across calls,
+      // so e.x/e.y will be mutated by the time any async callback fires.
+      const clickX  = e.x;
+      const clickY  = e.y;
+      const clickBtn = e.button;
+
       // Ignore clicks on any Flo window (but not the transparent overlay — it passes clicks through)
       for (const win of BrowserWindow.getAllWindows()) {
         if (win === overlayWin) continue;
         const b = win.getBounds();
-        if (e.x >= b.x - 10 && e.x <= b.x + b.width + 10 &&
-            e.y >= b.y - 10 && e.y <= b.y + b.height + 10) {
+        if (clickX >= b.x - 10 && clickX <= b.x + b.width + 10 &&
+            clickY >= b.y - 10 && clickY <= b.y + b.height + 10) {
           return;
         }
       }
@@ -562,22 +646,22 @@ ipcMain.handle('desktop:startHook', async (event) => {
       const wc = webContents.fromId(hookTargetWcId);
       if (!wc || wc.isDestroyed()) return;
 
-      wc.send('desktop:click', { x: e.x, y: e.y, button: e.button });
+      wc.send('desktop:click', { x: clickX, y: clickY, button: clickBtn });
 
-      // Convert physical pixel coords (uiohook) → logical coords for UIAutomation.
-      // PowerShell is System-DPI-Aware, so FromPoint expects logical coordinates.
-      const sf = screen.getPrimaryDisplay().scaleFactor || 1;
-      const logX = Math.round(e.x / sf);
-      const logY = Math.round(e.y / sf);
+      const sf   = screen.getPrimaryDisplay().scaleFactor || 1;
+      const logX = Math.round(clickX / sf);
+      const logY = Math.round(clickY / sf);
       queryElementAtPoint(logX, logY).then((result) => {
         if (!hookActive) return;
-        console.log(`[UIA] phys(${e.x},${e.y}) log(${logX},${logY}) sf=${sf} => ${JSON.stringify(result)}`);
         if (!result) return;
-        const [name, type] = result.split('|');
-        if (!name && !type) return;
+        const parts       = result.split('|');
+        const name        = parts[0] || '';
+        const type        = parts[1] || '';
+        const windowTitle = parts[2] || '';
+        if (!name && !type && !windowTitle) return;
         const wc2 = webContents.fromId(hookTargetWcId);
         if (wc2 && !wc2.isDestroyed()) {
-          wc2.send('desktop:click-element', { x: e.x, y: e.y, name: name || '', type: type || '' });
+          wc2.send('desktop:click-element', { x: clickX, y: clickY, name, type, windowTitle });
         }
       }).catch(() => {});
     });
@@ -621,6 +705,7 @@ public class WA{
   [DllImport("user32.dll")]public static extern bool GetWindowRect(IntPtr h,ref RECT r);
   [DllImport("user32.dll")]public static extern IntPtr MonitorFromWindow(IntPtr h,uint f);
   [DllImport("shcore.dll")]public static extern int GetDpiForMonitor(IntPtr m,int t,ref uint x,ref uint y);
+  [DllImport("user32.dll")]public static extern uint GetDpiForWindow(IntPtr h);
   [DllImport("user32.dll")]public static extern bool SetForegroundWindow(IntPtr h);
   [DllImport("user32.dll")]public static extern bool ShowWindow(IntPtr h,int n);
   [DllImport("user32.dll")]public static extern bool IsIconic(IntPtr h);
@@ -635,10 +720,11 @@ if([WA]::IsIconic([IntPtr]${hwnd})){[WA]::ShowWindow([IntPtr]${hwnd},9)|Out-Null
 # DWMWA_EXTENDED_FRAME_BOUNDS (9) gives the visual bounds without the invisible shadow extension
 $vr=New-Object WA+RECT
 if([WA]::DwmGetWindowAttribute([IntPtr]${hwnd},9,[ref]$vr,16) -eq 0){$r=$vr}
+$winDpi=[WA]::GetDpiForWindow([IntPtr]${hwnd})
 $mon=[WA]::MonitorFromWindow([IntPtr]${hwnd},2)
 $dx=[uint32]0;$dy=[uint32]0
 [WA]::GetDpiForMonitor($mon,0,[ref]$dx,[ref]$dy)|Out-Null
-$sf=if($dx -gt 0){$dx/96.0}else{1.0}
+$sf=if($winDpi -gt 0){$winDpi/96.0}elseif($dx -gt 0){$dx/96.0}else{1.0}
 Write-Output "$([Math]::Round($r.L/$sf)) $([Math]::Round($r.T/$sf)) $([Math]::Round($r.R/$sf)) $([Math]::Round($r.B/$sf))"`;
 
   try {
@@ -693,6 +779,9 @@ ipcMain.handle('desktop:showOverlay', async (_event, bounds) => {
   // setBounds() bypasses that cap so the overlay covers the correct display fully.
   win.setBounds({ x: Math.round(bounds.x), y: Math.round(bounds.y), width: Math.round(bounds.width), height: Math.round(bounds.height) });
 
+  // Exclude overlay from desktop captures so screenshots don't show the purple border.
+  // The user still sees it; screen capture tools (and desktopCapturer) do not.
+  win.setContentProtection(true);
   win.setTitle('FloOverlay');
   win.setIgnoreMouseEvents(true, { forward: true });
   win.on('closed', () => { if (overlayWin === win) overlayWin = null; });
@@ -717,6 +806,7 @@ ipcMain.handle('desktop:hideOverlay', () => {
 
 ipcMain.handle('desktop:runCountdown', async (_event, bounds) => {
   if (!bounds) { await new Promise(r => setTimeout(r, 3100)); return; }
+  console.log('[countdown] bounds:', JSON.stringify(bounds));
 
   const cwin = new BrowserWindow({
     x:              Math.round(bounds.x),
@@ -735,6 +825,7 @@ ipcMain.handle('desktop:runCountdown', async (_event, bounds) => {
 
   cwin.setIgnoreMouseEvents(true, { forward: true });
   cwin.setBounds({ x: Math.round(bounds.x), y: Math.round(bounds.y), width: Math.round(bounds.width), height: Math.round(bounds.height) });
+  console.log('[countdown] actual getBounds:', JSON.stringify(cwin.getBounds()));
 
   try {
     await cwin.loadFile(path.join(__dirname, 'renderer', 'countdown-overlay.html'));
