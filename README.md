@@ -35,10 +35,3 @@ npm run electron:pack:major  # major version bump
 ```
 
 Output goes to `app/release/`.
-
-## Repo layout
-
-```
-app/      Electron desktop application
-server/   Shared guide storage and CI integration (in progress)
-```
