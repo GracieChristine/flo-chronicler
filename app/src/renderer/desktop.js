@@ -406,24 +406,20 @@ function describeElement(name, type) {
 }
 
 function handleDesktopClickElement(data) {
-  console.log('[desktop] click-element:', data.name, data.type, data.windowTitle, 'steps:', steps.length);
   for (let i = steps.length - 1; i >= 0; i--) {
     const group = steps[i];
     for (let j = group.subActions.length - 1; j >= 0; j--) {
       const sub = group.subActions[j];
-      console.log('[desktop]   check sub._clickX', sub._clickX, 'vs data.x', data.x, '/ sub._clickY', sub._clickY, 'vs data.y', data.y);
       if (sub._clickX === data.x && sub._clickY === data.y) {
         const action  = sub._button === 2 ? 'Right-click' : 'Click';
         const before  = sub.text;
         applyElementToStep(sub, action, data);
-        console.log('[desktop]   updated text:', sub.text, '(was:', before, ')');
         if (sub.text !== before) renderStepsList();
         return;
       }
     }
   }
   // Step not yet in array (screenshot capture still in flight) — stash for handleDesktopClick
-  console.log('[desktop]   no match — storing in pending');
   const key = `${data.x},${data.y}`;
   pendingElements.set(key, data);
   setTimeout(() => pendingElements.delete(key), 5000);

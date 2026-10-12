@@ -755,8 +755,6 @@ ipcMain.handle('desktop:showOverlay', async (_event, bounds) => {
   }
   if (!bounds || !bounds.width || !bounds.height) return;
 
-  console.log('[overlay] requested:', JSON.stringify(bounds));
-
   // Use a local ref — another rapid showOverlay call may close this window
   // before loadFile resolves. Check isDestroyed() + identity before using it.
   const win = new BrowserWindow({
@@ -791,7 +789,6 @@ ipcMain.handle('desktop:showOverlay', async (_event, bounds) => {
   // Guard: a subsequent showOverlay call may have closed this window or replaced overlayWin
   if (win.isDestroyed() || overlayWin !== win) return;
 
-  console.log('[overlay] actual getBounds():', JSON.stringify(win.getBounds()));
   win.showInactive();
   win.setAlwaysOnTop(true, 'screen-saver');
   win.moveTop();
@@ -806,8 +803,6 @@ ipcMain.handle('desktop:hideOverlay', () => {
 
 ipcMain.handle('desktop:runCountdown', async (_event, bounds) => {
   if (!bounds) { await new Promise(r => setTimeout(r, 3100)); return; }
-  console.log('[countdown] bounds:', JSON.stringify(bounds));
-
   const cwin = new BrowserWindow({
     x:              Math.round(bounds.x),
     y:              Math.round(bounds.y),
@@ -825,7 +820,6 @@ ipcMain.handle('desktop:runCountdown', async (_event, bounds) => {
 
   cwin.setIgnoreMouseEvents(true, { forward: true });
   cwin.setBounds({ x: Math.round(bounds.x), y: Math.round(bounds.y), width: Math.round(bounds.width), height: Math.round(bounds.height) });
-  console.log('[countdown] actual getBounds:', JSON.stringify(cwin.getBounds()));
 
   try {
     await cwin.loadFile(path.join(__dirname, 'renderer', 'countdown-overlay.html'));
