@@ -13,7 +13,7 @@ A desktop app that records step-by-step guides as you work — capturing clicks,
 
 ## Download
 
-Grab the latest installer from [Releases](../../releases).
+Grab the latest installer from [Releases](../../releases). See [CHANGELOG](app/CHANGELOG.md) for what's in each version.
 
 ## Development
 
