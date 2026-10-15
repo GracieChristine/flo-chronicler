@@ -523,6 +523,8 @@ while ($true) {
   try {
     $parts = $line.Trim().Split(' ')
     $x = [int]$parts[0]; $y = [int]$parts[1]
+    $physX = if ($parts.Length -gt 2) { [int]$parts[2] } else { $x }
+    $physY = if ($parts.Length -gt 3) { [int]$parts[3] } else { $y }
     $hw = [FloWin]::WindowFromPoint($x, $y)
     $rw = [FloWin]::GetAncestor($hw, 3)
     $sb = New-Object System.Text.StringBuilder(512)
@@ -544,6 +546,11 @@ while ($true) {
         $curr = $p
       }
     } else { [Console]::Error.WriteLine("  uia FromPoint=null") }
+    $hitFlo = $winTitle -like '*Flo*Chronicler*'
+    if ($name -and ($hitFlo -or $name.StartsWith('_') -or $name -match '^[a-z][a-zA-Z]+\\d+$')) {
+      [Console]::Error.WriteLine("  uia-up: clearing name '$name' (hitFlo=$hitFlo) for fallback")
+      $name = ''
+    }
     if (-not $name -and $floAccOk) {
       $apt = New-Object FloAcc+PT; $apt.x = $x; $apt.y = $y
       $acc = $null; $child = $null
@@ -561,7 +568,9 @@ while ($true) {
     if (-not $name) {
       try {
         $hwnd = [FloWin]::GetAncestor([FloWin]::WindowFromPoint($x, $y), 3)
-        if (-not $hwnd) { $hwnd = [FloWin]::GetForegroundWindow() }
+        $sb2 = New-Object System.Text.StringBuilder(512)
+        [FloWin]::GetWindowText($hwnd, $sb2, 512) | Out-Null
+        if (-not $hwnd -or ($sb2.ToString() -like '*Flo*Chronicler*')) { $hwnd = [FloWin]::GetForegroundWindow() }
         $winEl = [System.Windows.Automation.AutomationElement]::FromHandle($hwnd)
         $cur = $winEl
         for ($d = 0; $d -lt 20 -and $cur; $d++) {
@@ -569,12 +578,14 @@ while ($true) {
           $next = $null
           while ($kid) {
             $br = $kid.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::BoundingRectangleProperty)
-            if ($br -and -not $br.IsEmpty -and $br.Left -le $x -and $x -le $br.Right -and $br.Top -le $y -and $y -le $br.Bottom) {
+            if ($br -and -not $br.IsEmpty -and $br.Left -le $physX -and $physX -le $br.Right -and $br.Top -le $physY -and $physY -le $br.Bottom) {
               $kn = $kid.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::NameProperty)
               $kct = $kid.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::ControlTypeProperty)
               $kt = if ($kct) { $kct.ProgrammaticName.Replace('ControlType.','') } else { '' }
-              [Console]::Error.WriteLine("  tree-down[$d] name='$kn' type='$kt' bounds=[$($br.Left),$($br.Top),$($br.Right),$($br.Bottom)]")
-              if ($kn -and $kn.Trim() -ne '' -and -not ($skip -contains $kt)) { $name = $kn.Trim(); $type = $kt; $src = "tree-down[$d]" }
+              $kn2 = $kn.Trim()
+              $isInternal = $kn2.StartsWith('_') -or [regex]::IsMatch($kn2, '^[a-z][a-zA-Z]+\\d+$')
+              [Console]::Error.WriteLine("  tree-down[$d] name='$kn' type='$kt' internal=$isInternal bounds=[$($br.Left),$($br.Top),$($br.Right),$($br.Bottom)]")
+              if ($kn2 -ne '' -and -not ($skip -contains $kt) -and -not $isInternal) { $name = $kn2; $type = $kt; $src = "tree-down[$d]" }
               $next = $kid; break
             }
             $kid = $cw.GetNextSibling($kid)
@@ -625,7 +636,7 @@ function stopUiaProcess() {
   uiaPending = []; uiaOutputBuf = '';
 }
 
-function queryElementAtPoint(x, y) {
+function queryElementAtPoint(x, y, physX = x, physY = y) {
   if (!uiaProcess) return Promise.resolve(null);
   return new Promise((resolve) => {
     const timeout = setTimeout(() => {
@@ -638,7 +649,7 @@ function queryElementAtPoint(x, y) {
       resolve(result || null);
     }
     uiaPending.push(innerResolve);
-    try { uiaProcess.stdin.write(`${x} ${y}\n`); }
+    try { uiaProcess.stdin.write(`${x} ${y} ${physX} ${physY}\n`); }
     catch { uiaPending.pop(); clearTimeout(timeout); resolve(null); }
   });
 }
@@ -682,7 +693,7 @@ ipcMain.handle('desktop:startHook', async (event) => {
       const sf   = screen.getPrimaryDisplay().scaleFactor || 1;
       const logX = Math.round(clickX / sf);
       const logY = Math.round(clickY / sf);
-      queryElementAtPoint(logX, logY).then((result) => {
+      queryElementAtPoint(logX, logY, clickX, clickY).then((result) => {
         if (!hookActive) return;
         if (!result) return;
         const parts       = result.split('|');

@@ -403,7 +403,7 @@ function describeElement(name, type) {
     Edit: 'text field', Hyperlink: 'link', ListItem: 'list item',
     MenuItem: 'menu button', RadioButton: 'radio button', Tab: 'tab',
     Text: 'text', ToolBar: 'toolbar', TreeItem: 'tree item',
-    MenuBar: 'nav bar', Tree: 'project tree'
+    MenuBar: 'menu bar', Tree: 'Project Tree'
   };
   const effectiveName = isInternalName(name) ? '' : name;
   const label = typeLabels[type] || (type && type !== '' ? type.toLowerCase() : '');
