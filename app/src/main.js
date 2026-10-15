@@ -472,6 +472,7 @@ public class FloWin {
   [DllImport("user32.dll")] public static extern IntPtr WindowFromPoint(int x, int y);
   [DllImport("user32.dll")] public static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
   [DllImport("user32.dll")] public static extern int GetWindowText(IntPtr hWnd, StringBuilder s, int n);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
 }
 '@
 $floAccOk = $false
@@ -512,7 +513,7 @@ public class FloAcc {
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 $skip = @('Window','Pane','Document','ScrollBar','Thumb','Group')
-$roleMap = @{43='Button';12='MenuItem';11='MenuItem';30='Link';42='Edit';44='CheckBox';45='RadioButton';46='ComboBox'}
+$roleMap = @{43='Button';12='MenuItem';11='MenuItem';30='Link';42='Edit';44='CheckBox';45='RadioButton';46='ComboBox';24='Tree'}
 $cw   = [System.Windows.Automation.TreeWalker]::ControlViewWalker
 [Console]::Error.WriteLine("UIA ready floAccOk=$floAccOk")
 while ($true) {
@@ -529,31 +530,61 @@ while ($true) {
     $winTitle = $sb.ToString()
     $pt = New-Object System.Windows.Point($x, $y)
     $el = [System.Windows.Automation.AutomationElement]::FromPoint($pt)
-    $name = ''; $type = ''
+    $name = ''; $type = ''; $src = 'none'
     if ($el) {
       $curr = $el
       for ($i = 0; $i -lt 6; $i++) {
         $n  = $curr.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::NameProperty)
         $ct = $curr.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::ControlTypeProperty)
         $t  = if ($ct) { $ct.ProgrammaticName.Replace('ControlType.','') } else { '' }
-        if ($n -and $n.Trim() -ne '' -and (-not ($skip -contains $t))) { $name = $n.Trim(); $type = $t; break }
+        [Console]::Error.WriteLine("  uia-up[$i] name='$n' type='$t'")
+        if ($n -and $n.Trim() -ne '' -and (-not ($skip -contains $t))) { $name = $n.Trim(); $type = $t; $src = "uia-up[$i]"; break }
         $p  = $cw.GetParent($curr)
         if ($null -eq $p) { break }
         $curr = $p
       }
-    }
+    } else { [Console]::Error.WriteLine("  uia FromPoint=null") }
     if (-not $name -and $floAccOk) {
       $apt = New-Object FloAcc+PT; $apt.x = $x; $apt.y = $y
       $acc = $null; $child = $null
       if ([FloAcc]::AccessibleObjectFromPoint($apt, [ref]$acc, [ref]$child) -eq 0 -and $acc) {
         $n = [FloAcc]::GetAccName($acc, $child)
+        $r = [FloAcc]::GetAccRole($acc, $child)
+        [Console]::Error.WriteLine("  msaa name='$n' role=$r")
         if ($n -and $n.Trim() -ne '' -and $n -ne $winTitle) {
           $name = $n.Trim()
-          $r    = [FloAcc]::GetAccRole($acc, $child)
           $type = if ($roleMap.ContainsKey($r)) { $roleMap[$r] } else { '' }
+          $src  = 'msaa'
         }
       }
     }
+    if (-not $name) {
+      try {
+        $hwnd = [FloWin]::GetAncestor([FloWin]::WindowFromPoint($x, $y), 3)
+        if (-not $hwnd) { $hwnd = [FloWin]::GetForegroundWindow() }
+        $winEl = [System.Windows.Automation.AutomationElement]::FromHandle($hwnd)
+        $cur = $winEl
+        for ($d = 0; $d -lt 20 -and $cur; $d++) {
+          $kid = $cw.GetFirstChild($cur)
+          $next = $null
+          while ($kid) {
+            $br = $kid.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::BoundingRectangleProperty)
+            if ($br -and -not $br.IsEmpty -and $br.Left -le $x -and $x -le $br.Right -and $br.Top -le $y -and $y -le $br.Bottom) {
+              $kn = $kid.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::NameProperty)
+              $kct = $kid.GetCurrentPropertyValue([System.Windows.Automation.AutomationElement]::ControlTypeProperty)
+              $kt = if ($kct) { $kct.ProgrammaticName.Replace('ControlType.','') } else { '' }
+              [Console]::Error.WriteLine("  tree-down[$d] name='$kn' type='$kt' bounds=[$($br.Left),$($br.Top),$($br.Right),$($br.Bottom)]")
+              if ($kn -and $kn.Trim() -ne '' -and -not ($skip -contains $kt)) { $name = $kn.Trim(); $type = $kt; $src = "tree-down[$d]" }
+              $next = $kid; break
+            }
+            $kid = $cw.GetNextSibling($kid)
+          }
+          if (-not $next) { break }
+          $cur = $next
+        }
+      } catch { [Console]::Error.WriteLine("  tree-down error: $_") }
+    }
+    [Console]::Error.WriteLine("  RESULT src=$src name='$name' type='$type'")
     [Console]::WriteLine("$name|$type|$winTitle")
   } catch { [Console]::WriteLine("||$winTitle") }
 }

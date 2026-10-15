@@ -391,17 +391,28 @@ function applyElementToStep(subAction, action, data) {
   }
 }
 
+function isInternalName(name) {
+  if (!name) return false;
+  if (name.startsWith('_')) return true;
+  return /^[a-z][a-zA-Z]+\d+$/.test(name); // WinForms auto-names: menuStrip1, toolStrip1
+}
+
 function describeElement(name, type) {
   const typeLabels = {
     Button: 'button', CheckBox: 'checkbox', ComboBox: 'dropdown',
     Edit: 'text field', Hyperlink: 'link', ListItem: 'list item',
-    MenuItem: 'menu item', RadioButton: 'radio button', Tab: 'tab',
-    Text: 'text', ToolBar: 'toolbar', TreeItem: 'tree item'
+    MenuItem: 'menu button', RadioButton: 'radio button', Tab: 'tab',
+    Text: 'text', ToolBar: 'toolbar', TreeItem: 'tree item',
+    MenuBar: 'nav bar', Tree: 'project tree'
   };
+  const effectiveName = isInternalName(name) ? '' : name;
   const label = typeLabels[type] || (type && type !== '' ? type.toLowerCase() : '');
-  if (name && label) return `'${name}' ${label}`;
-  if (name)          return `'${name}'`;
-  if (label)         return `a ${label}`;
+  if (effectiveName && label) return `'${effectiveName}' ${label}`;
+  if (effectiveName)          return `'${effectiveName}'`;
+  if (label) {
+    const definite = type === 'MenuBar' || type === 'Tree';
+    return `${definite ? 'the' : 'a'} ${label}`;
+  }
   return '';
 }
 
